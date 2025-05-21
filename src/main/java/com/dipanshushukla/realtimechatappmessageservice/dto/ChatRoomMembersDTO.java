@@ -20,6 +20,9 @@ public class ChatRoomMembersDTO {
     private Long chatId;
     private UserDTO user;
 
+    @Builder.Default
+    private boolean admin = false;
+
     @NotNull(message = "'userId' is required!")
     private UUID userId;
 
@@ -27,20 +30,13 @@ public class ChatRoomMembersDTO {
         return ChatRoomMembersDTO.builder()
                 .chatId(entity.getChatRoomMembersId().getChatId())
                 .userId(entity.getChatRoomMembersId().getUserId())
-                .user(UserDTO.builder()
-                        .userId(entity.getUser().getUserId())
-                        .fullName(entity.getUser().getFullName())
-                        .email(entity.getUser().getEmail())
-                        .avatar(entity.getUser().getAvatar())
-                        .bio(entity.getUser().getBio())
-                        .build())
+                .user(UserDTO.fromEntity(entity.getUser()))
+                .admin(entity.isAdmin())
                 .build();
     }
 
     public ChatRoomMembers toEntity() {
-        return new ChatRoomMembers(
-                new ChatRoomMembersId(this.chatId, this.userId),
-                null,
-                null);
+        return ChatRoomMembers.builder().chatRoomMembersId(new ChatRoomMembersId(this.chatId, this.userId))
+                .admin(this.admin).build();
     }
 }

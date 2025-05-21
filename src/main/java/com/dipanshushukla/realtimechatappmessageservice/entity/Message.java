@@ -57,4 +57,8 @@ public class Message {
     @Builder.Default
     @Enumerated(value = EnumType.STRING)
     private MessageType type = MessageType.TEXT;
+
+    @Builder.Default
+    @Column(nullable = false)
+    private boolean edited = false;
 }

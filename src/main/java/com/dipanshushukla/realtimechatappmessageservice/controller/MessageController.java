@@ -1,11 +1,18 @@
 package com.dipanshushukla.realtimechatappmessageservice.controller;
 
-import java.util.List;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.dipanshushukla.realtimechatappmessageservice.dto.MessageDTO;
 import com.dipanshushukla.realtimechatappmessageservice.service.MessageService;
@@ -39,12 +46,19 @@ public class MessageController {
     }
 
     @GetMapping("/rooms/{chatId}/messages")
-    public ResponseEntity<List<MessageDTO>> getMessages(
+    public ResponseEntity<Page<MessageDTO>> getMessages(
             @RequestHeader("X-User-Id") String userId,
-            @PathVariable Long chatId) {
+            @PathVariable Long chatId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "15") int size) {
 
-        List<MessageDTO> list = service.getMessagesFromChatRoom(chatId, parse(userId));
-        return ResponseEntity.ok(list);
+        Page<MessageDTO> paged = service.getMessagesFromChatRoom(
+                chatId,
+                parse(userId),
+                page,
+                size);
+
+        return ResponseEntity.ok(paged);
     }
 
     @GetMapping("/messages/{messageId}")

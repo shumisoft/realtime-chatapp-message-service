@@ -5,7 +5,11 @@ import org.hibernate.annotations.OnDeleteAction;
 
 import com.dipanshushukla.realtimechatappmessageservice.model.ChatRoomMembersId;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.Entity;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -29,4 +33,8 @@ public class ChatRoomMembers {
     @ManyToOne
     @JoinColumn(name = "userId", insertable = false, updatable = false)
     private User user;
+
+    @Builder.Default
+    @Column(nullable = false)
+    private boolean admin = false;
 }

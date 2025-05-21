@@ -1,8 +1,9 @@
 package com.dipanshushukla.realtimechatappmessageservice.service;
 
-import java.util.List;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import com.dipanshushukla.realtimechatappmessageservice.dto.MessageDTO;
@@ -18,32 +19,25 @@ import com.dipanshushukla.realtimechatappmessageservice.repository.ChatRoomRepos
 import com.dipanshushukla.realtimechatappmessageservice.repository.MessageRepository;
 import com.dipanshushukla.realtimechatappmessageservice.repository.UserRepository;
 
+import lombok.AllArgsConstructor;
+
 @Service
+@AllArgsConstructor
 public class MessageService {
 
-        private final MessageRepository msgRepo;
-        private final ChatRoomRepository roomRepo;
-        private final UserRepository userRepo;
-        private final ChatRoomMembersRepository membersRepo;
-
-        public MessageService(MessageRepository msgRepo,
-                        ChatRoomRepository roomRepo,
-                        UserRepository userRepo,
-                        ChatRoomMembersRepository membersRepo) {
-                this.msgRepo = msgRepo;
-                this.roomRepo = roomRepo;
-                this.userRepo = userRepo;
-                this.membersRepo = membersRepo;
-        }
+        private final MessageRepository messageRepository;
+        private final ChatRoomRepository chatRoomRepository;
+        private final UserRepository userRepository;
+        private final ChatRoomMembersRepository chatRoomMembersRepository;
 
         private void ensureMember(Long chatId, UUID requesterId) {
-                ChatRoom room = roomRepo.findById(chatId)
+                ChatRoom room = chatRoomRepository.findById(chatId)
                                 .orElseThrow(() -> new ResourceNotFoundException("Chat room not found"));
 
-                User user = userRepo.findById(requesterId)
+                User user = userRepository.findById(requesterId)
                                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-                boolean isMember = membersRepo.existsByChatRoomAndUser(room, user);
+                boolean isMember = chatRoomMembersRepository.existsByChatRoomAndUser(room, user);
 
                 if (!isMember)
                         throw new BadRequestException("User is not part of this chat room.");
@@ -52,10 +46,10 @@ public class MessageService {
         public MessageDTO createMessage(MessageDTO dto, UUID requesterId) {
                 ensureMember(dto.getChatRoomId(), requesterId);
 
-                User user = userRepo.findById(requesterId)
+                User user = userRepository.findById(requesterId)
                                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-                ChatRoom room = roomRepo.findById(dto.getChatRoomId())
+                ChatRoom room = chatRoomRepository.findById(dto.getChatRoomId())
                                 .orElseThrow(() -> new ResourceNotFoundException("Chat room not found"));
 
                 Message message = Message.builder()
@@ -66,24 +60,26 @@ public class MessageService {
                                 .status(MessageStatus.UNREAD)
                                 .build();
 
-                msgRepo.save(message);
+                messageRepository.save(message);
+
                 return MessageDTO.fromEntity(message);
         }
 
-        public List<MessageDTO> getMessagesFromChatRoom(Long chatRoomId, UUID requesterId) {
+        public Page<MessageDTO> getMessagesFromChatRoom(Long chatRoomId, UUID requesterId, int page, int size) {
                 ensureMember(chatRoomId, requesterId);
 
-                ChatRoom room = roomRepo.findById(chatRoomId)
+                ChatRoom room = chatRoomRepository.findById(chatRoomId)
                                 .orElseThrow(() -> new ResourceNotFoundException("Chat room not found"));
 
-                return msgRepo.findByChatRoom(room)
-                                .stream()
-                                .map(MessageDTO::fromEntity)
-                                .toList();
+                PageRequest pageable = PageRequest.of(page, size);
+
+                Page<Message> paged = messageRepository.findByChatRoomOrderByTimestampDesc(room, pageable);
+
+                return paged.map(MessageDTO::fromEntity);
         }
 
         public MessageDTO getMessage(Long messageId, UUID requesterId) {
-                Message msg = msgRepo.findById(messageId)
+                Message msg = messageRepository.findById(messageId)
                                 .orElseThrow(() -> new ResourceNotFoundException("Message not found"));
 
                 ensureMember(msg.getChatRoom().getChatId(), requesterId);
@@ -92,13 +88,13 @@ public class MessageService {
         }
 
         public void updateMessageStatus(Long messageId, UUID requesterId) {
-                Message msg = msgRepo.findById(messageId)
+                Message msg = messageRepository.findById(messageId)
                                 .orElseThrow(() -> new ResourceNotFoundException("Message not found"));
 
                 if (!msg.getUser().getUserId().equals(requesterId))
                         throw new BadRequestException("User cannot update another user's message.");
 
                 msg.setStatus(MessageStatus.READ);
-                msgRepo.save(msg);
+                messageRepository.save(msg);
         }
 }

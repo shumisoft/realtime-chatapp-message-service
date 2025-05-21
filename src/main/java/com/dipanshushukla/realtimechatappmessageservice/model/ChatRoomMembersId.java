@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @Embeddable
 @Data
 @AllArgsConstructor
-@NoArgsConstructor // fix: <-- required by JPA
+@NoArgsConstructor
 public class ChatRoomMembersId implements Serializable {
 
     private Long chatId;

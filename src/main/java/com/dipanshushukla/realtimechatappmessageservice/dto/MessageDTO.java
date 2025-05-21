@@ -8,8 +8,10 @@ import com.dipanshushukla.realtimechatappmessageservice.model.MessageStatus;
 import com.dipanshushukla.realtimechatappmessageservice.model.MessageType;
 
 import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @AllArgsConstructor
@@ -19,10 +21,8 @@ public class MessageDTO {
 
     private Long messageId;
 
-    @NotNull
     private Long chatRoomId;
 
-    @NotNull
     private UUID userId;
 
     @NotEmpty
@@ -30,9 +30,14 @@ public class MessageDTO {
 
     private Timestamp timestamp;
 
+    @Builder.Default
     private MessageStatus status = MessageStatus.UNREAD;
 
+    @Builder.Default
     private MessageType type = MessageType.TEXT;
+
+    @Builder.Default
+    private boolean edited = false;
 
     public static MessageDTO fromEntity(Message entity) {
         return MessageDTO.builder()
@@ -43,17 +48,20 @@ public class MessageDTO {
                 .timestamp(entity.getTimestamp())
                 .status(entity.getStatus())
                 .type(entity.getType())
+                .edited(entity.isEdited())
                 .build();
     }
 
     public Message toEntity() {
-        return new Message(
-                this.messageId,
-                null,
-                null,
-                this.content,
-                this.timestamp,
-                this.status,
-                this.type);
+        return Message.builder()
+                .messageId(this.messageId)
+                .content(this.content)
+                .timestamp(this.timestamp)
+                .status(this.status)
+                .type(this.type)
+                .edited(edited)
+                .build();
+
     }
+
 }

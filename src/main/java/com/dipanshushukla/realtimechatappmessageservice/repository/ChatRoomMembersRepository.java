@@ -19,6 +19,8 @@ public interface ChatRoomMembersRepository extends JpaRepository<ChatRoomMembers
 
     List<ChatRoomMembers> findByChatRoom(ChatRoom chatRoom);
 
+    ChatRoomMembers findByChatRoomAndUser(ChatRoom chatRoom, User user);
+
     Page<ChatRoomMembers> findByUser(User user, Pageable pageable);
 
 }
