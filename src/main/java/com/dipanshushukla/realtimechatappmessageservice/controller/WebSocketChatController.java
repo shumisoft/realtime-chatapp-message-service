@@ -7,7 +7,7 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.dipanshushukla.realtimechatappmessageservice.dto.MessageDTO;
-import com.dipanshushukla.realtimechatappmessageservice.redis.RedisPublisher;
+import com.dipanshushukla.realtimechatappmessageservice.redis.RedisMessagePublisher;
 import com.dipanshushukla.realtimechatappmessageservice.service.MessageService;
 import com.dipanshushukla.realtimechatappmessageservice.service.ULIDService;
 
@@ -18,7 +18,7 @@ import lombok.RequiredArgsConstructor;
 public class WebSocketChatController {
 
     private final MessageService messageService;
-    private final RedisPublisher redisPublisher;
+    private final RedisMessagePublisher redisMessagePublisher;
     private final ULIDService ulid;
 
     @MessageMapping("/chat.sendMessage")
@@ -27,10 +27,13 @@ public class WebSocketChatController {
         UUID senderId = UUID.fromString(userId);
 
         // assign ID at ingress
-        dto.setMessageId(ulid.newId());
+        dto.setMessageId(ulid.newIdString());
         dto.setUserId(senderId);
 
-        // persist async = enqueue
-        redisPublisher.publish("chat-messages", dto);
+        // SINGLE SOURCE OF TRUTH
+        MessageDTO saved = messageService.createMessage(dto, senderId);
+
+        // FANOUT ONLY
+        redisMessagePublisher.publish("chat-messages", saved);
     }
 }

@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
-public class RedisPublisher {
+public class RedisMessagePublisher {
 
     private final RedisTemplate<String, Object> redisTemplate;
 
