@@ -34,11 +34,14 @@ public class ChatRoom {
     private Long chatId;
 
     private String name;
+
     @Enumerated(EnumType.STRING)
     private ChatRoomType type;
+
     @Column(nullable = false, updatable = false)
     @CreationTimestamp
     private Timestamp createdAt;
+
     @Column(columnDefinition = "TEXT")
     private String description;
 
