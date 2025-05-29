@@ -17,13 +17,13 @@ public class RedisMessageSubscriber implements MessageListener {
 
     private final MessageService messageService;
     private final SimpMessagingTemplate messagingTemplate;
+    private final ObjectMapper objectMapper;
 
     @Override
     public void onMessage(Message message, byte[] pattern) {
 
         try {
-            String json = new String(message.getBody());
-            MessageDTO dto = new ObjectMapper().readValue(json, MessageDTO.class);
+            MessageDTO dto = objectMapper.readValue(message.getBody(), MessageDTO.class);
 
             // save in DB
             MessageDTO saved = messageService.createMessage(dto, dto.getUserId());
