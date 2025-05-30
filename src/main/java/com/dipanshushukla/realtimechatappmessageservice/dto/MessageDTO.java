@@ -6,6 +6,7 @@ import java.util.UUID;
 import com.dipanshushukla.realtimechatappmessageservice.entity.Message;
 import com.dipanshushukla.realtimechatappmessageservice.model.MessageStatus;
 import com.dipanshushukla.realtimechatappmessageservice.model.MessageType;
+import com.dipanshushukla.realtimechatappmessageservice.util.UlidUtils;
 
 import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
@@ -41,7 +42,7 @@ public class MessageDTO {
 
     public static MessageDTO fromEntity(Message entity) {
         return MessageDTO.builder()
-                .messageId(entity.getMessageId())
+                .messageId(UlidUtils.toString(entity.getMessageId()))
                 .chatRoomId(entity.getChatRoom().getChatId())
                 .userId(entity.getUser().getUserId())
                 .content(entity.getContent())
@@ -54,7 +55,7 @@ public class MessageDTO {
 
     public Message toEntity() {
         return Message.builder()
-                .messageId(this.messageId)
+                .messageId(UlidUtils.toBytes(this.messageId))
                 .content(this.content)
                 .timestamp(this.timestamp)
                 .status(this.status)
