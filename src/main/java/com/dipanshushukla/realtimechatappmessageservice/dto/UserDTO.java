@@ -24,6 +24,11 @@ public class UserDTO {
     public static UserDTO fromEntity(User entity) {
         return UserDTO.builder()
                 .userId(entity.getUserId())
+                .fullName(entity.getFullName())
+                .username(entity.getUsername())
+                .email(entity.getEmail())
+                .avatar(entity.getAvatar())
+                .bio(entity.getBio())
                 .build();
     }
 
