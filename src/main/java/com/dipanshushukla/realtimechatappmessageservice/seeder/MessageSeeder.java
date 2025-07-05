@@ -1,5 +1,7 @@
 package com.dipanshushukla.realtimechatappmessageservice.seeder;
 
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.List;
 
 import org.springframework.boot.ApplicationArguments;
@@ -100,6 +102,7 @@ public class MessageSeeder implements ApplicationRunner {
     dto.setChatRoomId(chatRoomId);
     dto.setUserId(userId);
     dto.setContent(content);
+    dto.setTimestamp(Timestamp.from(Instant.now()));
     messageService.createMessage(dto, userId);
     log.info("[Seeder] ✔ Created message in chat {}: {}", chatRoomId, content);
   }
