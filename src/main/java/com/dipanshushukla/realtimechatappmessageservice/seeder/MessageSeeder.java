@@ -61,13 +61,56 @@ public class MessageSeeder implements ApplicationRunner {
 
     dmRooms.forEach(room -> {
       List<ChatRoomMember> members = membersRepository.findByChatRoom(room);
-      members.forEach(member -> {
-        User user = member.getUser();
-        createMessage(room.getChatId(), user.getUserId(),
-            "Hello, I am " + user.getUsername());
-        createMessage(room.getChatId(), user.getUserId(),
-            "Nice to meet you!");
-      });
+
+      if (members.size() != 2) {
+        log.warn("[Seeder] DM room {} does not have exactly 2 members. Skipping...", room.getChatId());
+        return;
+      }
+
+      User user1 = members.get(0).getUser();
+      User user2 = members.get(1).getUser();
+
+      String[] conversation = {
+          "Hey " + user2.getUsername() + ", how are you?",
+          "I'm good! How about you?",
+          "Doing well. Working on the chat app project.",
+          "Nice! How's it going so far?",
+          "Pretty good. Just implementing message features.",
+          "That sounds interesting.",
+          "Yeah, adding real-time support was tricky.",
+          "WebSockets?",
+          "Exactly. Took some time to get it right.",
+          "But I guess it's worth it.",
+          "Definitely. Feels great when it works.",
+          "Are you adding notifications too?",
+          "Yes, planning to.",
+          "Nice. This app is going to be solid.",
+          "Hope so. Still need to optimize performance.",
+          "That's always the fun part.",
+          "True. Debugging at midnight is not fun though.",
+          "Haha, I can relate.",
+          "Anyway, what are you working on?",
+          "Mostly backend APIs these days.",
+          "Spring Boot?",
+          "Of course.",
+          "Good choice.",
+          "Alright, I’ll get back to coding.",
+          "Sure, talk later.",
+          "See you soon.",
+          "Bye!"
+      };
+
+      // Generate 25–30 alternating messages
+      for (int i = 0; i < conversation.length; i++) {
+        User sender = (i % 2 == 0) ? user1 : user2;
+        createMessage(room.getChatId(), sender.getUserId(), conversation[i]);
+
+        try {
+          Thread.sleep(50); // small delay to slightly vary timestamps
+        } catch (InterruptedException e) {
+          Thread.currentThread().interrupt();
+        }
+      }
     });
   }
 
