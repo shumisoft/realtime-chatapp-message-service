@@ -18,7 +18,7 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
     @Query(value = """
                 SELECT cr.*
                 FROM chat_room cr
-                JOIN chat_room_members crm ON cr.chat_id = crm.chat_id
+                JOIN chat_room_member crm ON cr.chat_id = crm.chat_id
                 LEFT JOIN (
                     SELECT chat_id, MAX(timestamp) AS last_message_time
                     FROM message
@@ -29,7 +29,7 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
                     COALESCE(lm.last_message_time, cr.created_at) DESC
             """, countQuery = """
                 SELECT COUNT(*)
-                FROM chat_room_members
+                FROM chat_room_member
                 WHERE user_id = :userId
             """, nativeQuery = true)
     Page<ChatRoom> findUserChatRoomsOrdered(UUID userId, Pageable pageable);
