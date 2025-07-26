@@ -5,6 +5,6 @@ import lombok.Data;
 @Data
 public class TypingEventDTO {
     private String chatId;
-    private String username; // or userId
+    private String userId;
     private boolean typing;
 }

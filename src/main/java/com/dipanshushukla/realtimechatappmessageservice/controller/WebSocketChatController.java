@@ -12,7 +12,6 @@ import com.dipanshushukla.realtimechatappmessageservice.dto.MessageDTO;
 import com.dipanshushukla.realtimechatappmessageservice.dto.TypingEventDTO;
 import com.dipanshushukla.realtimechatappmessageservice.redis.RedisMessagePublisher;
 import com.dipanshushukla.realtimechatappmessageservice.service.KafkaProducerService;
-import com.dipanshushukla.realtimechatappmessageservice.service.MessageService;
 import com.dipanshushukla.realtimechatappmessageservice.service.ULIDService;
 
 import lombok.RequiredArgsConstructor;
@@ -23,7 +22,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class WebSocketChatController {
 
-    private final MessageService messageService;
     private final RedisMessagePublisher redisMessagePublisher;
     private final ULIDService ulid;
 
@@ -34,17 +32,17 @@ public class WebSocketChatController {
 
         UUID senderId = UUID.fromString(userId);
 
-        // assign ID at ingress
-        dto.setMessageId(ulid.newIdString());
-        dto.setUserId(senderId);
-        dto.setTimestamp(Timestamp.from(Instant.now()));
+        if (dto.getMessageId() == null || dto.getMessageId().isEmpty()) {
+            // assign ID at ingress
+            dto.setMessageId(ulid.newIdString());
+            dto.setUserId(senderId);
+            dto.setTimestamp(Timestamp.from(Instant.now()));
+        }
 
         log.info(dto.toString());
 
         // Publish to Kafka for asynchronous persistence
         kafkaProducerService.publish(dto);
-
-        // MessageDTO saved = messageService.createMessage(dto, dto.getUserId());
 
         // FANOUT ONLY
         redisMessagePublisher.publish("chat-messages", dto);

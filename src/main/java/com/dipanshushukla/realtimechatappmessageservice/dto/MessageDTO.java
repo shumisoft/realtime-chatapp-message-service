@@ -6,7 +6,6 @@ import java.util.UUID;
 import com.dipanshushukla.realtimechatappmessageservice.entity.Message;
 import com.dipanshushukla.realtimechatappmessageservice.model.MessageStatus;
 import com.dipanshushukla.realtimechatappmessageservice.model.MessageType;
-import com.dipanshushukla.realtimechatappmessageservice.util.UlidUtils;
 
 import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
