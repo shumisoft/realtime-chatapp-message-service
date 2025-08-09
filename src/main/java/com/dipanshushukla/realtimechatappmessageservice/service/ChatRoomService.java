@@ -100,6 +100,7 @@ public class ChatRoomService {
                     .name(dto.getName())
                     .description(dto.getDescription())
                     .type(dto.getType())
+                    .icon(dto.getIcon())
                     .members(new ArrayList<>()) // FIX: Initialize list
                     .build();
 
@@ -164,6 +165,8 @@ public class ChatRoomService {
             chatRoom.setType(dto.getType());
         if (dto.getDescription() != null)
             chatRoom.setDescription(dto.getDescription());
+        if (dto.getIcon() != null)
+            chatRoom.setIcon(dto.getIcon());
 
         chatRoomRepository.save(chatRoom);
     }

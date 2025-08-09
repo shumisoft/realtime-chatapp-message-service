@@ -32,6 +32,8 @@ public class ChatRoomDTO {
     @NotNull(message = "'description' is required!")
     private String description;
 
+    private String icon;
+
     private MessageDTO latestMessage;
 
     private ChatRoomMembersDTO[] members;
@@ -45,6 +47,7 @@ public class ChatRoomDTO {
                 .type(entity.getType())
                 .createdAt(entity.getCreatedAt())
                 .description(entity.getDescription())
+                .icon(entity.getIcon())
                 .members(entity.getMembers() != null
                         ? entity.getMembers().stream()
                                 .map(ChatRoomMembersDTO::fromEntity)
@@ -54,6 +57,11 @@ public class ChatRoomDTO {
     }
 
     public ChatRoom toEntity() {
-        return new ChatRoom(this.name, this.type, this.description);
+        return ChatRoom.builder()
+                .name(this.name)
+                .type(this.type)
+                .description(this.description)
+                .icon(this.icon)
+                .build();
     }
 }

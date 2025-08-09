@@ -45,15 +45,13 @@ public class ChatRoom {
     @Column(columnDefinition = "TEXT")
     private String description;
 
+    @Column(name = "icon", columnDefinition = "TEXT")
+    private String icon;
+
     @OneToMany(mappedBy = "chatRoom", cascade = CascadeType.REMOVE, orphanRemoval = true)
     private List<Message> messages = new ArrayList<>();
 
     @OneToMany(mappedBy = "chatRoom", cascade = CascadeType.REMOVE, orphanRemoval = true)
     private List<ChatRoomMember> members = new ArrayList<>();
 
-    public ChatRoom(String name, ChatRoomType type, String description) {
-        this.name = name;
-        this.type = type;
-        this.description = description;
-    }
 }
