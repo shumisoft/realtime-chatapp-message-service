@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.dipanshushukla.realtimechatappmessageservice.dto.MessageDTO;
 import com.dipanshushukla.realtimechatappmessageservice.dto.TypingEventDTO;
+import com.dipanshushukla.realtimechatappmessageservice.model.MessageStatus;
+import com.dipanshushukla.realtimechatappmessageservice.model.MessageType;
 import com.dipanshushukla.realtimechatappmessageservice.redis.RedisMessagePublisher;
 import com.dipanshushukla.realtimechatappmessageservice.service.KafkaProducerService;
 import com.dipanshushukla.realtimechatappmessageservice.service.ULIDService;
@@ -40,7 +42,14 @@ public class WebSocketChatController {
             dto.setMessageId(ulid.newIdString());
             dto.setUserId(senderId);
             dto.setTimestamp(Timestamp.from(Instant.now()));
+            dto.setStatus(MessageStatus.SENT);
         }
+
+        if (dto.getType() == null)
+            dto.setType(MessageType.TEXT);
+
+        if (dto.getEdited() == null)
+            dto.setEdited(false);
 
         log.info(dto.toString());
 
