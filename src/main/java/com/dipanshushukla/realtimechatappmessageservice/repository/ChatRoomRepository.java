@@ -46,4 +46,5 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
             @Param("user1Id") UUID user1Id,
             @Param("user2Id") UUID user2Id);
 
+    boolean existsByName(String name);
 }
