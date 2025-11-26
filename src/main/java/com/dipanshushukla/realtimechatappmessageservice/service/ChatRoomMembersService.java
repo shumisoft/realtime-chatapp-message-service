@@ -1,6 +1,7 @@
 package com.dipanshushukla.realtimechatappmessageservice.service;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -9,12 +10,12 @@ import com.dipanshushukla.realtimechatappmessageservice.dto.ChatRoomMembersDTO;
 import com.dipanshushukla.realtimechatappmessageservice.entity.ChatRoom;
 import com.dipanshushukla.realtimechatappmessageservice.entity.ChatRoomMembers;
 import com.dipanshushukla.realtimechatappmessageservice.entity.User;
+import com.dipanshushukla.realtimechatappmessageservice.exception.BadRequestException;
+import com.dipanshushukla.realtimechatappmessageservice.exception.ResourceNotFoundException;
 import com.dipanshushukla.realtimechatappmessageservice.model.ChatRoomMembersId;
 import com.dipanshushukla.realtimechatappmessageservice.repository.ChatRoomMembersRepository;
 import com.dipanshushukla.realtimechatappmessageservice.repository.ChatRoomRepository;
 import com.dipanshushukla.realtimechatappmessageservice.repository.UserRepository;
-
-import jakarta.persistence.EntityNotFoundException;
 
 @Service
 public class ChatRoomMembersService {
@@ -28,37 +29,43 @@ public class ChatRoomMembersService {
     @Autowired
     private ChatRoomMembersRepository chatRoomMembersRepository;
 
-    public void addMember(ChatRoomMembersDTO chatRoomMembersDTO) throws EntityNotFoundException, IllegalArgumentException{
-        // Check if chat room and user exists
-        ChatRoom chatRoom = chatRoomRepository.findById(chatRoomMembersDTO.getChatId()).orElseThrow(() -> new EntityNotFoundException("Chat Room not found with id: " + chatRoomMembersDTO.getChatId()));
-        User user = userRepository.findById(chatRoomMembersDTO.getUserId()).orElseThrow(()-> new EntityNotFoundException("User not found with id: " + chatRoomMembersDTO.getUserId()));
+    public void addMember(ChatRoomMembersDTO dto) {
+        ChatRoom chatRoom = chatRoomRepository.findById(dto.getChatId())
+                .orElseThrow(() -> new ResourceNotFoundException("Chat Room not found with id: " + dto.getChatId()));
 
-        // check if user already a member of chat room
-        if (chatRoomMembersRepository.existsByChatRoomAndUser(chatRoom, user)){
-            throw new IllegalArgumentException("User is already a member of the chat room.");
+        User user = userRepository.findById(dto.getUserId())
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + dto.getUserId()));
+
+        if (chatRoomMembersRepository.existsByChatRoomAndUser(chatRoom, user)) {
+            throw new BadRequestException("User is already a member of the chat room.");
         }
 
-        ChatRoomMembersId chatRoomMembersId = new ChatRoomMembersId(chatRoomMembersDTO.getChatId(), chatRoomMembersDTO.getUserId());
-        ChatRoomMembers chatRoomMembers = new ChatRoomMembers(chatRoomMembersId, chatRoom, user);
+        ChatRoomMembers members = ChatRoomMembers.builder()
+                .chatRoomMembersId(new ChatRoomMembersId(dto.getChatId(), dto.getUserId()))
+                .chatRoom(chatRoom)
+                .user(user)
+                .build();
 
-        chatRoomMembersRepository.save(chatRoomMembers);
-
+        chatRoomMembersRepository.save(members);
     }
 
-    public void removeMember(Long chatRoomId, Long userId) throws EntityNotFoundException{
-        
-        // Check if chat room and user exists
-        chatRoomRepository.findById(chatRoomId).orElseThrow(() -> new EntityNotFoundException("Chat Room not found with id: " + chatRoomId ));
-        userRepository.findById(userId).orElseThrow(()-> new EntityNotFoundException("User not found with id: " + userId ));
-        
-        ChatRoomMembersId chatRoomMembersId = new ChatRoomMembersId(chatRoomId, userId);
-        chatRoomMembersRepository.deleteById(chatRoomMembersId);
+    public void removeMember(Long chatRoomId, UUID userId) {
+        chatRoomRepository.findById(chatRoomId)
+                .orElseThrow(() -> new ResourceNotFoundException("Chat Room not found with id: " + chatRoomId));
+        userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+
+        ChatRoomMembersId id = new ChatRoomMembersId(chatRoomId, userId);
+        chatRoomMembersRepository.deleteById(id);
     }
 
-    public List<Long> getMembers(Long chatRoomId) throws EntityNotFoundException{
-        // check if chat room exits
-        ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId).orElseThrow(() -> new EntityNotFoundException("Chat Room not found with id: " + chatRoomId ));
-        return chatRoomMembersRepository.findByChatRoom(chatRoom).stream().map((x) -> x.getUser().getUserId()).toList();
-    }
+    public List<UUID> getMembers(Long chatRoomId) {
+        ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
+                .orElseThrow(() -> new ResourceNotFoundException("Chat Room not found with id: " + chatRoomId));
 
+        return chatRoomMembersRepository.findByChatRoom(chatRoom)
+                .stream()
+                .map(x -> x.getUser().getUserId())
+                .toList();
+    }
 }

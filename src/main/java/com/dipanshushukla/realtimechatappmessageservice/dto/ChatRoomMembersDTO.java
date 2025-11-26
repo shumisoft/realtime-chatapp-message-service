@@ -4,27 +4,32 @@ import com.dipanshushukla.realtimechatappmessageservice.entity.ChatRoomMembers;
 import com.dipanshushukla.realtimechatappmessageservice.model.ChatRoomMembersId;
 
 import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+
+import java.util.UUID;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class ChatRoomMembersDTO {
 
     private Long chatId;
-    @NotNull(message = "'userId' is required!")
-    private Long userId;
 
-    // Static method to convert entity to DTO
+    @NotNull(message = "'userId' is required!")
+    private UUID userId;
+
     public static ChatRoomMembersDTO fromEntity(ChatRoomMembers entity) {
-        return new ChatRoomMembersDTO(entity.getChatRoomMembersId().getChatId(), entity.getChatRoomMembersId().getUserId());
+        return ChatRoomMembersDTO.builder()
+                .chatId(entity.getChatRoomMembersId().getChatId())
+                .userId(entity.getChatRoomMembersId().getUserId())
+                .build();
     }
 
-    // Method to convert DTO to entity
     public ChatRoomMembers toEntity() {
-        return new ChatRoomMembers(new ChatRoomMembersId(this.chatId, this.userId), null, null); // Assuming you don't need to set ChatRoom and User here
+        return new ChatRoomMembers(
+                new ChatRoomMembersId(this.chatId, this.userId),
+                null,
+                null);
     }
 }
-

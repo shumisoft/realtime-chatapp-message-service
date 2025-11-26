@@ -1,5 +1,7 @@
 package com.dipanshushukla.realtimechatappmessageservice.entity;
 
+import java.util.UUID;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
@@ -13,5 +15,5 @@ import lombok.NoArgsConstructor;
 public class User {
 
     @Id
-    private Long userId;
+    private UUID userId;
 }

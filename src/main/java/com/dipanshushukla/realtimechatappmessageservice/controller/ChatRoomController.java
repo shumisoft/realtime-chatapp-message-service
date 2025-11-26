@@ -1,6 +1,7 @@
 package com.dipanshushukla.realtimechatappmessageservice.controller;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -22,10 +23,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
-
-
 @RestController
-@RequestMapping("/chat/rooms")
+@RequestMapping("/rooms")
 public class ChatRoomController {
 
     @Autowired
@@ -33,47 +32,45 @@ public class ChatRoomController {
 
     @PostMapping
     public ResponseEntity<String> createChatRoom(@Valid @RequestBody ChatRoomDTO chatRoomDTO) {
-        service.createChatRoom(chatRoomDTO);        
+        service.createChatRoom(chatRoomDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body("Chat Room created successfully.");
     }
-    
 
     @GetMapping("{chatId}")
-    public ResponseEntity<?> getChatRoomById(@RequestParam Long chatRoomId){
-        try{
+    public ResponseEntity<?> getChatRoomById(@RequestParam Long chatRoomId) {
+        try {
             return ResponseEntity.ok(service.getChatRoomById(chatRoomId));
-        }
-        catch (EntityNotFoundException e){
+        } catch (EntityNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
     }
 
     @PutMapping("{chatId}")
     public ResponseEntity<String> updateChatRoom(@PathVariable Long chatId, @RequestBody ChatRoomDTO chatRoomDTO) {
-        try{
+        try {
             service.updateChatRoom(chatId, chatRoomDTO);
-        }catch(IllegalArgumentException e){
+        } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
-        }catch (EntityNotFoundException e){
+        } catch (EntityNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
-        
+
         return ResponseEntity.ok().body("Chat room updated successfully");
     }
 
     @DeleteMapping("{chatId}")
-    public ResponseEntity<?> deleteChatRoom(@RequestParam Long chatRoomId){
+    public ResponseEntity<?> deleteChatRoom(@RequestParam Long chatRoomId) {
         try {
             service.deleteChatRoom(chatRoomId);
         } catch (EntityNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
-        
+
         return ResponseEntity.ok().body("Chat room deleted successfully");
     }
 
     @GetMapping("/user/{userId}")
-    public ResponseEntity<?> getAllChatRoomsFromUserId(@RequestParam Long userId) {
+    public ResponseEntity<?> getAllChatRoomsFromUserId(@RequestParam UUID userId) {
         try {
             List<ChatRoomDTO> chatRooms = service.getAllChatRoomsFromUserId(userId);
             return ResponseEntity.ok(chatRooms);
@@ -81,6 +78,5 @@ public class ChatRoomController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
     }
-    
-    
+
 }

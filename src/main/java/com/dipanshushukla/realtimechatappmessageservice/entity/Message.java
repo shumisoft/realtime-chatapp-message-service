@@ -17,6 +17,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -24,12 +25,13 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class Message {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long messageId;
-    
+
     @ManyToOne
     @JoinColumn(name = "chatId")
     private ChatRoom chatRoom;
@@ -44,7 +46,7 @@ public class Message {
     @Column(nullable = false, updatable = false)
     @CreationTimestamp
     private Timestamp timestamp;
-    
+
     @Enumerated(value = EnumType.STRING)
     private MessageStatus status = MessageStatus.UNREAD;
 

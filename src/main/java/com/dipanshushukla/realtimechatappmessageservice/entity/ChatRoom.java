@@ -13,16 +13,22 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class ChatRoom {
- 
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long chatId;
-    
+
     private String name;
     @Enumerated(EnumType.STRING)
     private ChatRoomType type;
@@ -32,7 +38,7 @@ public class ChatRoom {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    public ChatRoom(String name, ChatRoomType type, String description){
+    public ChatRoom(String name, ChatRoomType type, String description) {
         this.name = name;
         this.type = type;
         this.description = description;

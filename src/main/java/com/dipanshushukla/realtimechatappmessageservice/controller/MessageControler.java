@@ -20,18 +20,15 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 
-
-
-
 @RestController
-@RequestMapping("/chat")
 public class MessageControler {
 
     @Autowired
     private MessageService service;
 
     @PostMapping("/rooms/{chatRoomId}/messages")
-    public ResponseEntity<String> createMessage(@PathVariable Long chatRoomId, @Valid @RequestBody MessageDTO messageDTO) {
+    public ResponseEntity<String> createMessage(@PathVariable Long chatRoomId,
+            @Valid @RequestBody MessageDTO messageDTO) {
         messageDTO.setChatRoomId(chatRoomId);
 
         try {
@@ -39,39 +36,38 @@ public class MessageControler {
         } catch (EntityNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
-        
+
         return ResponseEntity.status(HttpStatus.CREATED).body("Message created succesfully.");
     }
 
     @GetMapping("/rooms/{chatRoomId}/messages")
     public ResponseEntity<?> getMessagesFromChatRoom(@PathVariable Long chatRoomId) {
-        try{
+        try {
             List<MessageDTO> messages = service.getMessagesFromChatRoom(chatRoomId);
             return ResponseEntity.ok(messages);
-        }catch (EntityNotFoundException e) {
+        } catch (EntityNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
     }
-    
+
     @GetMapping("/messages/{messageId}")
     public ResponseEntity<?> getMessageFromMessageId(@PathVariable Long messageId) {
-        try{
+        try {
             MessageDTO messageDTO = service.getMessageFromMessageId(messageId);
             return ResponseEntity.ok(messageDTO);
-        } catch (EntityNotFoundException e){
+        } catch (EntityNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
     }
 
     @PutMapping("/messages/{messageId}")
     public ResponseEntity<String> updateMessageStatu(@PathVariable Long messageId) {
-        try{
+        try {
             service.updateMessageStatus(messageId);
             return ResponseEntity.ok("Message status updated Successfully.");
-        } catch (EntityNotFoundException e){
+        } catch (EntityNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
     }
-    
 
 }

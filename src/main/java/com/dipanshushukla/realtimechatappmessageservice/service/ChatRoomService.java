@@ -1,19 +1,19 @@
 package com.dipanshushukla.realtimechatappmessageservice.service;
 
-import java.util.List;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import com.dipanshushukla.realtimechatappmessageservice.dto.ChatRoomDTO;
 import com.dipanshushukla.realtimechatappmessageservice.entity.ChatRoom;
-import com.dipanshushukla.realtimechatappmessageservice.entity.ChatRoomMembers;
 import com.dipanshushukla.realtimechatappmessageservice.entity.User;
+import com.dipanshushukla.realtimechatappmessageservice.exception.BadRequestException;
+import com.dipanshushukla.realtimechatappmessageservice.exception.ResourceNotFoundException;
 import com.dipanshushukla.realtimechatappmessageservice.repository.ChatRoomMembersRepository;
 import com.dipanshushukla.realtimechatappmessageservice.repository.ChatRoomRepository;
 import com.dipanshushukla.realtimechatappmessageservice.repository.UserRepository;
 
-import jakarta.persistence.EntityNotFoundException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.UUID;
 
 @Service
 public class ChatRoomService {
@@ -27,40 +27,54 @@ public class ChatRoomService {
     @Autowired
     private ChatRoomMembersRepository chatRoomMembersRepository;
 
-    public void createChatRoom(ChatRoomDTO chatRoomDTO ){        
-        ChatRoom chatRoom = new ChatRoom(chatRoomDTO.getName(), chatRoomDTO.getType(), chatRoomDTO.getDescription());
-        repository.save(chatRoom);
-    }
+    public ChatRoomDTO createChatRoom(ChatRoomDTO dto) {
+        ChatRoom chatRoom = ChatRoom.builder()
+                .name(dto.getName())
+                .type(dto.getType())
+                .description(dto.getDescription())
+                .build();
 
-    public ChatRoomDTO getChatRoomById(Long chatRoomId) throws EntityNotFoundException{
-        ChatRoom chatRoom = repository.findById(chatRoomId).orElseThrow(() -> new EntityNotFoundException("No chat room found by id: " + chatRoomId));
+        repository.save(chatRoom);
         return ChatRoomDTO.fromEntity(chatRoom);
     }
 
-    public void updateChatRoom(Long chatRoomId, ChatRoomDTO chatRoomDTO) throws IllegalArgumentException, EntityNotFoundException{
-        if (chatRoomDTO.getName() == null && chatRoomDTO.getType() == null && chatRoomDTO.getDescription() == null){
-            throw new IllegalArgumentException("At least one field must be supplied to update the chat room.");
-        }
-
-        ChatRoom chatRoom = repository.findById(chatRoomId).orElseThrow(() -> new EntityNotFoundException("No chat room found by id: " + chatRoomId));
-
-        if (chatRoomDTO.getType() != null) chatRoom.setType(chatRoomDTO.getType());
-        if (chatRoomDTO.getName() != null) chatRoom.setName(chatRoomDTO.getName());
-        if (chatRoomDTO.getDescription() != null) chatRoom.setDescription(chatRoomDTO.getDescription());
-
-        repository.save(chatRoom);
-        
+    public ChatRoomDTO getChatRoomById(Long chatRoomId) {
+        ChatRoom chatRoom = repository.findById(chatRoomId)
+                .orElseThrow(() -> new ResourceNotFoundException("No chat room found by id: " + chatRoomId));
+        return ChatRoomDTO.fromEntity(chatRoom);
     }
 
-    public void deleteChatRoom(Long chatRoomId) throws EntityNotFoundException{
-        ChatRoom chatRoom = repository.findById(chatRoomId).orElseThrow(() -> new EntityNotFoundException("No chat room found by id: " + chatRoomId));
+    public void updateChatRoom(Long chatRoomId, ChatRoomDTO dto) {
+        if (dto.getName() == null && dto.getType() == null && dto.getDescription() == null) {
+            throw new BadRequestException("At least one field must be supplied to update the chat room.");
+        }
+
+        ChatRoom chatRoom = repository.findById(chatRoomId)
+                .orElseThrow(() -> new ResourceNotFoundException("No chat room found by id: " + chatRoomId));
+
+        if (dto.getType() != null)
+            chatRoom.setType(dto.getType());
+        if (dto.getName() != null)
+            chatRoom.setName(dto.getName());
+        if (dto.getDescription() != null)
+            chatRoom.setDescription(dto.getDescription());
+
+        repository.save(chatRoom);
+    }
+
+    public void deleteChatRoom(Long chatRoomId) {
+        ChatRoom chatRoom = repository.findById(chatRoomId)
+                .orElseThrow(() -> new ResourceNotFoundException("No chat room found by id: " + chatRoomId));
         repository.delete(chatRoom);
     }
 
-    
-    public List<ChatRoomDTO> getAllChatRoomsFromUserId(Long userId) throws EntityNotFoundException{
-        User user = userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("No user found with id: " + userId));
-        return chatRoomMembersRepository.findByUser(user).stream().map(x -> x.getChatRoom().getChatId()).map(this::getChatRoomById).toList();
-    }
+    public List<ChatRoomDTO> getAllChatRoomsFromUserId(UUID userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("No user found with id: " + userId));
 
+        return chatRoomMembersRepository.findByUser(user)
+                .stream()
+                .map(x -> ChatRoomDTO.fromEntity(x.getChatRoom()))
+                .toList();
+    }
 }

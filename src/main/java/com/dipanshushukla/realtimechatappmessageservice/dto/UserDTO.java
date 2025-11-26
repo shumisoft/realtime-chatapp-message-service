@@ -2,25 +2,25 @@ package com.dipanshushukla.realtimechatappmessageservice.dto;
 
 import com.dipanshushukla.realtimechatappmessageservice.entity.User;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+
+import java.util.UUID;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class UserDTO {
 
-    private Long userId;
+    private UUID userId;
 
-    // Static method to convert entity to DTO
     public static UserDTO fromEntity(User entity) {
-        return new UserDTO(entity.getUserId());
+        return UserDTO.builder()
+                .userId(entity.getUserId())
+                .build();
     }
 
-    // Method to convert DTO to entity
     public User toEntity() {
         return new User(this.userId);
     }
 }
-

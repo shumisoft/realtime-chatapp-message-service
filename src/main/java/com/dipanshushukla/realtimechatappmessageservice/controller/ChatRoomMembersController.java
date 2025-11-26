@@ -1,6 +1,7 @@
 package com.dipanshushukla.realtimechatappmessageservice.controller;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -21,31 +22,31 @@ import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
-
 @RestController
-@RequestMapping("/chat/rooms/{chatId}/members")
+@RequestMapping("/rooms/{chatId}/members")
 public class ChatRoomMembersController {
 
     @Autowired
     private ChatRoomMembersService service;
 
     @GetMapping
-    public ResponseEntity<?> getMembers(@PathVariable Long chatId){
-        try{
-            List<Long> members = service.getMembers(chatId);
+    public ResponseEntity<?> getMembers(@PathVariable Long chatId) {
+        try {
+            List<UUID> members = service.getMembers(chatId);
             return ResponseEntity.ok(members);
-        }catch(EntityNotFoundException e){
+        } catch (EntityNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
     }
 
-    @PostMapping    
-    public ResponseEntity<String> addMember(@PathVariable Long chatId, @Valid @RequestBody ChatRoomMembersDTO chatRoomMembersDTO){
-        try{
+    @PostMapping
+    public ResponseEntity<String> addMember(@PathVariable Long chatId,
+            @Valid @RequestBody ChatRoomMembersDTO chatRoomMembersDTO) {
+        try {
             service.addMember(chatRoomMembersDTO);
-        }catch (EntityNotFoundException e){
+        } catch (EntityNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        } catch (IllegalArgumentException e){
+        } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
 
@@ -53,12 +54,12 @@ public class ChatRoomMembersController {
     }
 
     @DeleteMapping
-    public ResponseEntity<String> removeMember(@PathVariable Long chatId, @RequestParam Long userId){
-        try{
+    public ResponseEntity<String> removeMember(@PathVariable Long chatId, @RequestParam UUID userId) {
+        try {
             service.removeMember(chatId, userId);
-        }catch (EntityNotFoundException e){
+        } catch (EntityNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        } catch (IllegalArgumentException e){
+        } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
 
