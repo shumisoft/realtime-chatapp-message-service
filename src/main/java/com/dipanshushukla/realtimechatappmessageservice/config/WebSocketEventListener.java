@@ -9,9 +9,11 @@ import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 import com.dipanshushukla.realtimechatappmessageservice.service.UserPresenceService;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class WebSocketEventListener {
 
     private final UserPresenceService userPresenceService;
@@ -23,7 +25,8 @@ public class WebSocketEventListener {
 
         if (userId != null) {
             userPresenceService.markUserOnline(userId);
-            System.out.println("User Connected: " + userId);
+
+            log.info("[WS] User connected: {}", userId);
         }
     }
 

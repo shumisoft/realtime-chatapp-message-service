@@ -26,80 +26,84 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class MessageServiceImpl implements MessageService {
 
-        private final MessageRepository messageRepository;
-        private final ChatRoomRepository chatRoomRepository;
-        private final UserRepository userRepository;
-        private final ChatRoomMemberRepository chatRoomMembersRepository;
+	private final MessageRepository messageRepository;
+	private final ChatRoomRepository chatRoomRepository;
+	private final UserRepository userRepository;
+	private final ChatRoomMemberRepository chatRoomMembersRepository;
 
-        private void ensureMember(Long chatId, UUID requesterId) {
-                ChatRoom room = chatRoomRepository.findById(chatId)
-                                .orElseThrow(() -> new ResourceNotFoundException("Chat room not found"));
+	private static final String CHAT_ROOM_NOT_FOUND = "Chat room not found";
+	private static final String MESSAGE_NOT_FOUND = "Message not found";
+	private static final String USER_NOT_FOUND = "User not found";
 
-                User user = userRepository.findById(requesterId)
-                                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+	private void ensureMember(Long chatId, UUID requesterId) {
+		ChatRoom room = chatRoomRepository.findById(chatId)
+				.orElseThrow(() -> new ResourceNotFoundException(CHAT_ROOM_NOT_FOUND));
 
-                boolean isMember = chatRoomMembersRepository.existsByChatRoomAndUser(room, user);
+		User user = userRepository.findById(requesterId)
+				.orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND));
 
-                if (!isMember)
-                        throw new BadRequestException("User                 if (!isMember)\n" + //
-                                        "is not part of this chat room.");
-        }
+		boolean isMember = chatRoomMembersRepository.existsByChatRoomAndUser(room, user);
 
-        @Override
-        public MessageDTO createMessage(MessageDTO dto, UUID requesterId) {
-                ensureMember(dto.getChatRoomId(), requesterId);
+		if (!isMember)
+			throw new BadRequestException("User                 if (!isMember)\n" + //
+					"is not part of this chat room.");
+	}
 
-                User user = userRepository.findById(requesterId)
-                                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+	@Override
+	public MessageDTO createMessage(MessageDTO dto, UUID requesterId) {
+		ensureMember(dto.getChatRoomId(), requesterId);
 
-                ChatRoom room = chatRoomRepository.findById(dto.getChatRoomId())
-                                .orElseThrow(() -> new ResourceNotFoundException("Chat room not found"));
+		User user = userRepository.findById(requesterId)
+				.orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND));
 
-                Message message = dto.toEntity();
-                message.setChatRoom(room);
-                message.setUser(user);
+		ChatRoom room = chatRoomRepository.findById(dto.getChatRoomId())
+				.orElseThrow(() -> new ResourceNotFoundException(CHAT_ROOM_NOT_FOUND));
 
-                message = messageRepository.save(message);
+		Message message = dto.toEntity();
+		message.setChatRoom(room);
+		message.setUser(user);
 
-                return MessageDTO.fromEntity(message);
-        }
+		message = messageRepository.save(message);
 
-        @Override
-        public Page<MessageDTO> getMessagesFromChatRoom(Long chatRoomId, UUID requesterId, int page, int size) {
-                ensureMember(chatRoomId, requesterId);
+		return MessageDTO.fromEntity(message);
+	}
 
-                ChatRoom room = chatRoomRepository.findById(chatRoomId)
-                                .orElseThrow(() -> new ResourceNotFoundException("Chat room not found"));
+	@Override
+	public Page<MessageDTO> getMessagesFromChatRoom(Long chatRoomId, UUID requesterId, int page, int size) {
+		ensureMember(chatRoomId, requesterId);
 
-                if (room.getType() == ChatRoomType.DIRECT_MESSAGE)
-                        messageRepository.markMessagesAsRead(chatRoomId, requesterId);
+		ChatRoom room = chatRoomRepository.findById(chatRoomId)
+				.orElseThrow(() -> new ResourceNotFoundException(CHAT_ROOM_NOT_FOUND));
 
-                PageRequest pageable = PageRequest.of(page, size);
+		if (room.getType() == ChatRoomType.DIRECT_MESSAGE)
+			messageRepository.markMessagesAsRead(chatRoomId, requesterId);
 
-                Page<Message> paged = messageRepository.findByChatRoomOrderByTimestampDesc(room, pageable);
+		PageRequest pageable = PageRequest.of(page, size);
 
-                return paged.map(MessageDTO::fromEntity);
-        }
+		Page<Message> paged = messageRepository.findByChatRoomOrderByTimestampDesc(room, pageable);
 
-        @Override
-        public MessageDTO getMessage(String messageId, UUID requesterId) {
-                Message msg = messageRepository.findById(messageId)
-                                .orElseThrow(() -> new ResourceNotFoundException("Message not found"));
+		return paged.map(MessageDTO::fromEntity);
+	}
 
-                ensureMember(msg.getChatRoom().getChatId(), requesterId);
+	@Override
+	public MessageDTO getMessage(String messageId, UUID requesterId) {
+		Message msg = messageRepository.findById(messageId)
+				.orElseThrow(() -> new ResourceNotFoundException(MESSAGE_NOT_FOUND));
 
-                return MessageDTO.fromEntity(msg);
-        }
+		ensureMember(msg.getChatRoom().getChatId(), requesterId);
 
-        @Override
-        public void updateMessageStatus(String messageId, UUID requesterId) {
-                Message msg = messageRepository.findById(messageId)
-                                .orElseThrow(() -> new ResourceNotFoundException("Message not found"));
+		return MessageDTO.fromEntity(msg);
+	}
 
-                if (!msg.getUser().getUserId().equals(requesterId))
-                        throw new BadRequestException("User cannot update another user's message.");
+	@Override
+	public void updateMessageStatus(String messageId, UUID requesterId) {
+		Message msg = messageRepository.findById(messageId)
+				.orElseThrow(() -> new ResourceNotFoundException(MESSAGE_NOT_FOUND));
 
-                msg.setStatus(MessageStatus.READ);
-                messageRepository.save(msg);
-        }
+		if (!msg.getUser().getUserId().equals(requesterId))
+			throw new BadRequestException("User cannot update another user's message.");
+
+		msg.setStatus(MessageStatus.READ);
+		messageRepository.save(msg);
+	}
 }

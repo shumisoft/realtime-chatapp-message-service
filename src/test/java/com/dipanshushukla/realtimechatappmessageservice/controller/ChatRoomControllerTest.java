@@ -37,78 +37,80 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @ExtendWith(MockitoExtension.class)
 class ChatRoomControllerTest {
 
-    private MockMvc mockMvc;
+	private MockMvc mockMvc;
 
-    @Mock
-    private ChatRoomService chatRoomService;
+	@Mock
+	private ChatRoomService chatRoomService;
 
-    @InjectMocks
-    private ChatRoomController chatRoomController;
+	@InjectMocks
+	private ChatRoomController chatRoomController;
 
-    private ObjectMapper objectMapper = new ObjectMapper();
-    private ChatRoomDTO chatRoomDTO;
-    private final String USER_ID_HEADER = "X-User-Id";
+	private ObjectMapper objectMapper = new ObjectMapper();
+	private ChatRoomDTO chatRoomDTO;
+	private static final String USER_ID_HEADER = "X-User-Id";
 
-    @BeforeEach
-    void setUp() {
-        // Wire up the controller with the GlobalExceptionHandler to test exception
-        // routing
-        mockMvc = MockMvcBuilders.standaloneSetup(chatRoomController)
-                .setControllerAdvice(new GlobalExceptionHandler())
-                .build();
+	@BeforeEach
+	void setUp() {
+		// Wire up the controller with the GlobalExceptionHandler to test exception
+		// routing
+		mockMvc = MockMvcBuilders.standaloneSetup(chatRoomController)
+				.setControllerAdvice(new GlobalExceptionHandler())
+				.build();
 
-        chatRoomDTO = ChatRoomDTO.builder()
-                .chatId(MessageDataFactory.DEFAULT_CHAT_ROOM_ID)
-                .name("General Chat")
-                .type(ChatRoomType.PUBLIC)
-                .description("A general discussion room")
-                .build();
-    }
+		chatRoomDTO = ChatRoomDTO.builder()
+				.chatId(MessageDataFactory.DEFAULT_CHAT_ROOM_ID)
+				.name("General Chat")
+				.type(ChatRoomType.PUBLIC)
+				.description("A general discussion room")
+				.build();
+	}
 
-    @Test
-    @DisplayName("POST /api/chat-rooms should return 201 Created")
-    void createChatRoom_Success() throws Exception {
-        when(chatRoomService.createChatRoom(any(ChatRoomDTO.class), eq(MessageDataFactory.DEFAULT_SENDER_ID)))
-                .thenReturn(chatRoomDTO);
+	@Test
+	@DisplayName("POST /api/chat-rooms should return 201 Created")
+	void createChatRoom_Success() throws Exception {
+		when(chatRoomService.createChatRoom(any(ChatRoomDTO.class), eq(MessageDataFactory.DEFAULT_SENDER_ID)))
+				.thenReturn(chatRoomDTO);
 
-        mockMvc.perform(post("/rooms")
-                .header(USER_ID_HEADER, MessageDataFactory.DEFAULT_SENDER_ID.toString())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(chatRoomDTO)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.name").value("General Chat"));
+		mockMvc.perform(post("/rooms")
+				.header(USER_ID_HEADER, MessageDataFactory.DEFAULT_SENDER_ID.toString())
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(chatRoomDTO)))
+				.andExpect(status().isCreated())
+				.andExpect(jsonPath("$.name").value("General Chat"));
 
-        verify(chatRoomService).createChatRoom(any(ChatRoomDTO.class), eq(MessageDataFactory.DEFAULT_SENDER_ID));
-    }
+		verify(chatRoomService).createChatRoom(any(ChatRoomDTO.class),
+				eq(MessageDataFactory.DEFAULT_SENDER_ID));
+	}
 
-    @Test
-    @DisplayName("GET /api/chat-rooms should return paginated list of chat rooms")
-    void getMyChatRooms_Success() throws Exception {
-        PageRequest pageRequest = PageRequest.of(0, 10);
-        Page<ChatRoomDTO> pagedResponse = new PageImpl<>(List.of(chatRoomDTO), pageRequest, 1);
-        when(chatRoomService.getMyChatRooms(eq(MessageDataFactory.DEFAULT_SENDER_ID), anyInt(), anyInt()))
-                .thenReturn(pagedResponse);
+	@Test
+	@DisplayName("GET /api/chat-rooms should return paginated list of chat rooms")
+	void getMyChatRooms_Success() throws Exception {
+		PageRequest pageRequest = PageRequest.of(0, 10);
+		Page<ChatRoomDTO> pagedResponse = new PageImpl<>(List.of(chatRoomDTO), pageRequest, 1);
+		when(chatRoomService.getMyChatRooms(eq(MessageDataFactory.DEFAULT_SENDER_ID), anyInt(), anyInt()))
+				.thenReturn(pagedResponse);
 
-        mockMvc.perform(get("/rooms/my")
-                .header(USER_ID_HEADER, MessageDataFactory.DEFAULT_SENDER_ID.toString())
-                .param("page", "0")
-                .param("size", "10"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content[0].chatId").value(MessageDataFactory.DEFAULT_CHAT_ROOM_ID));
-    }
+		mockMvc.perform(get("/rooms/my")
+				.header(USER_ID_HEADER, MessageDataFactory.DEFAULT_SENDER_ID.toString())
+				.param("page", "0")
+				.param("size", "10"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.content[0].chatId")
+						.value(MessageDataFactory.DEFAULT_CHAT_ROOM_ID));
+	}
 
-    @Test
-    @DisplayName("Should translate BadRequestException to 400 Bad Request via GlobalExceptionHandler")
-    void createChatRoom_BadRequest_Returns400() throws Exception {
-        when(chatRoomService.createChatRoom(any(ChatRoomDTO.class), eq(MessageDataFactory.DEFAULT_SENDER_ID)))
-                .thenThrow(new BadRequestException("Invalid DM configuration"));
+	@Test
+	@DisplayName("Should translate BadRequestException to 400 Bad Request via GlobalExceptionHandler")
+	void createChatRoom_BadRequest_Returns400() throws Exception {
+		when(chatRoomService.createChatRoom(any(ChatRoomDTO.class), eq(MessageDataFactory.DEFAULT_SENDER_ID)))
+				.thenThrow(new BadRequestException("Invalid DM configuration"));
 
-        mockMvc.perform(post("/rooms")
-                .header(USER_ID_HEADER, MessageDataFactory.DEFAULT_SENDER_ID.toString())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(chatRoomDTO)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Invalid DM configuration"));
-    }
+		mockMvc.perform(post("/rooms")
+				.header(USER_ID_HEADER, MessageDataFactory.DEFAULT_SENDER_ID.toString())
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(chatRoomDTO)))
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.message").value("Invalid DM configuration"));
+	}
 
 }

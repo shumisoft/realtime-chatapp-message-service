@@ -39,89 +39,89 @@ import com.dipanshushukla.realtimechatappmessageservice.service.impl.MessageServ
 @ExtendWith(MockitoExtension.class)
 class MessageServiceImplTest {
 
-    @Mock
-    private MessageRepository messageRepository;
-    @Mock
-    private ChatRoomRepository chatRoomRepository;
-    @Mock
-    private UserRepository userRepository;
-    @Mock
-    private ChatRoomMemberRepository chatRoomMembersRepository;
+	@Mock
+	private MessageRepository messageRepository;
+	@Mock
+	private ChatRoomRepository chatRoomRepository;
+	@Mock
+	private UserRepository userRepository;
+	@Mock
+	private ChatRoomMemberRepository chatRoomMembersRepository;
 
-    @InjectMocks
-    private MessageServiceImpl messageService;
+	@InjectMocks
+	private MessageServiceImpl messageService;
 
-    private User user;
-    private ChatRoom chatRoom;
-    private Message message;
-    private MessageDTO messageDTO;
+	private User user;
+	private ChatRoom chatRoom;
+	private Message message;
+	private MessageDTO messageDTO;
 
-    @BeforeEach
-    void setUp() {
-        user = MessageDataFactory.createValidUser();
-        chatRoom = MessageDataFactory.createValidChatRoom();
-        message = MessageDataFactory.createValidMessage(chatRoom, user);
-        messageDTO = MessageDataFactory.createValidMessageDTO();
-    }
+	@BeforeEach
+	void setUp() {
+		user = MessageDataFactory.createValidUser();
+		chatRoom = MessageDataFactory.createValidChatRoom();
+		message = MessageDataFactory.createValidMessage(chatRoom, user);
+		messageDTO = MessageDataFactory.createValidMessageDTO();
+	}
 
-    private void mockEnsureMemberSuccess() {
-        when(chatRoomRepository.findById(MessageDataFactory.DEFAULT_CHAT_ROOM_ID)).thenReturn(Optional.of(chatRoom));
-        when(userRepository.findById(MessageDataFactory.DEFAULT_SENDER_ID)).thenReturn(Optional.of(user));
-        when(chatRoomMembersRepository.existsByChatRoomAndUser(chatRoom, user)).thenReturn(true);
-    }
+	private void mockEnsureMemberSuccess() {
+		when(chatRoomRepository.findById(MessageDataFactory.DEFAULT_CHAT_ROOM_ID)).thenReturn(Optional.of(chatRoom));
+		when(userRepository.findById(MessageDataFactory.DEFAULT_SENDER_ID)).thenReturn(Optional.of(user));
+		when(chatRoomMembersRepository.existsByChatRoomAndUser(chatRoom, user)).thenReturn(true);
+	}
 
-    @Test
-    @DisplayName("Should successfully create a message if user is a member")
-    void createMessage_Success() {
-        mockEnsureMemberSuccess();
-        when(messageRepository.save(any(Message.class))).thenReturn(message);
+	@Test
+	@DisplayName("Should successfully create a message if user is a member")
+	void createMessage_Success() {
+		mockEnsureMemberSuccess();
+		when(messageRepository.save(any(Message.class))).thenReturn(message);
 
-        MessageDTO result = messageService.createMessage(messageDTO, MessageDataFactory.DEFAULT_SENDER_ID);
+		MessageDTO result = messageService.createMessage(messageDTO, MessageDataFactory.DEFAULT_SENDER_ID);
 
-        assertNotNull(result);
-        assertEquals(MessageDataFactory.DEFAULT_MESSAGE_ID, result.getMessageId());
-        verify(messageRepository).save(any(Message.class));
-    }
+		assertNotNull(result);
+		assertEquals(MessageDataFactory.DEFAULT_MESSAGE_ID, result.getMessageId());
+		verify(messageRepository).save(any(Message.class));
+	}
 
-    @Test
-    @DisplayName("Should throw BadRequestException if user is not a member of the room")
-    void createMessage_NotMember_ThrowsException() {
-        when(chatRoomRepository.findById(MessageDataFactory.DEFAULT_CHAT_ROOM_ID)).thenReturn(Optional.of(chatRoom));
-        when(userRepository.findById(MessageDataFactory.DEFAULT_SENDER_ID)).thenReturn(Optional.of(user));
-        when(chatRoomMembersRepository.existsByChatRoomAndUser(chatRoom, user)).thenReturn(false);
+	@Test
+	@DisplayName("Should throw BadRequestException if user is not a member of the room")
+	void createMessage_NotMember_ThrowsException() {
+		when(chatRoomRepository.findById(MessageDataFactory.DEFAULT_CHAT_ROOM_ID)).thenReturn(Optional.of(chatRoom));
+		when(userRepository.findById(MessageDataFactory.DEFAULT_SENDER_ID)).thenReturn(Optional.of(user));
+		when(chatRoomMembersRepository.existsByChatRoomAndUser(chatRoom, user)).thenReturn(false);
 
-        assertThrows(BadRequestException.class,
-                () -> messageService.createMessage(messageDTO, MessageDataFactory.DEFAULT_SENDER_ID));
-    }
+		assertThrows(BadRequestException.class,
+				() -> messageService.createMessage(messageDTO, MessageDataFactory.DEFAULT_SENDER_ID));
+	}
 
-    @Test
-    @DisplayName("Should mark messages as read when fetching from a Direct Message room")
-    void getMessagesFromChatRoom_DM_MarksAsRead() {
-        mockEnsureMemberSuccess();
-        chatRoom.setType(ChatRoomType.DIRECT_MESSAGE);
-        Page<Message> pagedMessages = new PageImpl<>(List.of(message));
+	@Test
+	@DisplayName("Should mark messages as read when fetching from a Direct Message room")
+	void getMessagesFromChatRoom_DM_MarksAsRead() {
+		mockEnsureMemberSuccess();
+		chatRoom.setType(ChatRoomType.DIRECT_MESSAGE);
+		Page<Message> pagedMessages = new PageImpl<>(List.of(message));
 
-        when(messageRepository.findByChatRoomOrderByTimestampDesc(eq(chatRoom), any(PageRequest.class)))
-                .thenReturn(pagedMessages);
+		when(messageRepository.findByChatRoomOrderByTimestampDesc(eq(chatRoom), any(PageRequest.class)))
+				.thenReturn(pagedMessages);
 
-        Page<MessageDTO> result = messageService.getMessagesFromChatRoom(MessageDataFactory.DEFAULT_CHAT_ROOM_ID,
-                MessageDataFactory.DEFAULT_SENDER_ID, 0, 10);
+		Page<MessageDTO> result = messageService.getMessagesFromChatRoom(MessageDataFactory.DEFAULT_CHAT_ROOM_ID,
+				MessageDataFactory.DEFAULT_SENDER_ID, 0, 10);
 
-        assertNotNull(result);
-        assertEquals(1, result.getTotalElements());
-        verify(messageRepository).markMessagesAsRead(MessageDataFactory.DEFAULT_CHAT_ROOM_ID,
-                MessageDataFactory.DEFAULT_SENDER_ID);
-    }
+		assertNotNull(result);
+		assertEquals(1, result.getTotalElements());
+		verify(messageRepository).markMessagesAsRead(MessageDataFactory.DEFAULT_CHAT_ROOM_ID,
+				MessageDataFactory.DEFAULT_SENDER_ID);
+	}
 
-    @Test
-    @DisplayName("Should update status to READ if requester is the owner")
-    void updateMessageStatus_Success() {
-        when(messageRepository.findById(MessageDataFactory.DEFAULT_MESSAGE_ID)).thenReturn(Optional.of(message));
+	@Test
+	@DisplayName("Should update status to READ if requester is the owner")
+	void updateMessageStatus_Success() {
+		when(messageRepository.findById(MessageDataFactory.DEFAULT_MESSAGE_ID)).thenReturn(Optional.of(message));
 
-        messageService.updateMessageStatus(MessageDataFactory.DEFAULT_MESSAGE_ID, MessageDataFactory.DEFAULT_SENDER_ID);
+		messageService.updateMessageStatus(MessageDataFactory.DEFAULT_MESSAGE_ID, MessageDataFactory.DEFAULT_SENDER_ID);
 
-        assertEquals(MessageStatus.READ, message.getStatus());
-        verify(messageRepository).save(message);
-    }
+		assertEquals(MessageStatus.READ, message.getStatus());
+		verify(messageRepository).save(message);
+	}
 
 }

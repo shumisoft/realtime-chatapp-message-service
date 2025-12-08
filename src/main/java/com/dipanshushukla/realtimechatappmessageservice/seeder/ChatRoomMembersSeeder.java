@@ -28,6 +28,8 @@ public class ChatRoomMembersSeeder implements ApplicationRunner {
   private final UserRepository userRepository;
   private final ChatRoomMemberRepository memberRepository;
 
+  private static final String USER1 = "user1";
+
   @Override
   public void run(ApplicationArguments args) throws Exception {
 
@@ -41,7 +43,7 @@ public class ChatRoomMembersSeeder implements ApplicationRunner {
     log.info("[Seeder] ChatRoomMembersSeeder started...");
 
     // ---------- DIRECT MESSAGE ROOMS ----------
-    seedDM("DM_user1_user2", List.of("user1", "user2"));
+    seedDM("DM_user1_user2", List.of(USER1, "user2"));
     seedDM("DM_user3_user4", List.of("user3", "user4"));
     seedDM("DM_user5_user6", List.of("user5", "user6"));
     seedDM("DM_user7_user8", List.of("user7", "user8"));
@@ -51,9 +53,9 @@ public class ChatRoomMembersSeeder implements ApplicationRunner {
     seedPrivate(
         "Dummy Group",
         List.of(
-            "user1", "user2", "user3", "user4", "user5",
+            USER1, "user2", "user3", "user4", "user5",
             "user6", "user7", "user8", "user9", "user10"),
-        "user1" // admin
+        USER1 // admin
     );
 
     log.info("[Seeder] ChatRoomMembersSeeder finished!");

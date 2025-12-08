@@ -15,24 +15,24 @@ import com.dipanshushukla.realtimechatappmessageservice.redis.RedisMessagePublis
 @ExtendWith(MockitoExtension.class)
 class RedisMessagePublisherTest {
 
-    @Mock
-    private RedisTemplate<String, Object> redisTemplate;
+	@Mock
+	private RedisTemplate<String, Object> redisTemplate;
 
-    @InjectMocks
-    private RedisMessagePublisher redisMessagePublisher;
+	@InjectMocks
+	private RedisMessagePublisher redisMessagePublisher;
 
-    @Test
-    @DisplayName("Should successfully convert and send message to Redis channel")
-    void publish_ShouldSendToRedisChannel() {
-        // Arrange
-        String targetChannel = "chat_room_100";
-        Object mockMessage = new Object();
+	@Test
+	@DisplayName("Should successfully convert and send message to Redis channel")
+	void publish_ShouldSendToRedisChannel() {
+		// Arrange
+		String targetChannel = "chat_room_100";
+		Object mockMessage = new Object();
 
-        // Act
-        redisMessagePublisher.publish(targetChannel, mockMessage);
+		// Act
+		redisMessagePublisher.publish(targetChannel, mockMessage);
 
-        // Assert
-        verify(redisTemplate).convertAndSend(targetChannel, mockMessage);
-    }
+		// Assert
+		verify(redisTemplate).convertAndSend(targetChannel, mockMessage);
+	}
 
 }

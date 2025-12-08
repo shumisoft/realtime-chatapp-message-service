@@ -33,81 +33,81 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 @ExtendWith(MockitoExtension.class)
 class ChatRoomMembersControllerTest {
-    private MockMvc mockMvc;
+	private MockMvc mockMvc;
 
-    @Mock
-    private ChatRoomMembersService membersService;
+	@Mock
+	private ChatRoomMembersService membersService;
 
-    @InjectMocks
-    private ChatRoomMembersController membersController;
+	@InjectMocks
+	private ChatRoomMembersController membersController;
 
-    private ObjectMapper objectMapper = new ObjectMapper();
-    private final String USER_ID_HEADER = "X-User-Id";
-    private UUID requesterId = MessageDataFactory.DEFAULT_SENDER_ID;
-    private Long chatId = MessageDataFactory.DEFAULT_CHAT_ROOM_ID;
+	private ObjectMapper objectMapper = new ObjectMapper();
+	private static final String USER_ID_HEADER = "X-User-Id";
+	private UUID requesterId = MessageDataFactory.DEFAULT_SENDER_ID;
+	private Long chatId = MessageDataFactory.DEFAULT_CHAT_ROOM_ID;
 
-    @BeforeEach
-    void setUp() {
-        mockMvc = MockMvcBuilders.standaloneSetup(membersController)
-                .setControllerAdvice(new GlobalExceptionHandler())
-                .build();
-    }
+	@BeforeEach
+	void setUp() {
+		mockMvc = MockMvcBuilders.standaloneSetup(membersController)
+				.setControllerAdvice(new GlobalExceptionHandler())
+				.build();
+	}
 
-    @Test
-    @DisplayName("GET /rooms/{chatId}/members should return 200 OK with member list")
-    void getMembers_Success() throws Exception {
-        // Correctly nesting UserDTO inside ChatRoomMembersDTO
-        UserDTO userDto = UserDTO.builder()
-                .userId(requesterId)
-                .username("test_user")
-                .build();
+	@Test
+	@DisplayName("GET /rooms/{chatId}/members should return 200 OK with member list")
+	void getMembers_Success() throws Exception {
+		// Correctly nesting UserDTO inside ChatRoomMembersDTO
+		UserDTO userDto = UserDTO.builder()
+				.userId(requesterId)
+				.username("test_user")
+				.build();
 
-        ChatRoomMembersDTO member = ChatRoomMembersDTO.builder()
-                .chatId(chatId)
-                .userId(requesterId)
-                .user(userDto)
-                .admin(true)
-                .build();
+		ChatRoomMembersDTO member = ChatRoomMembersDTO.builder()
+				.chatId(chatId)
+				.userId(requesterId)
+				.user(userDto)
+				.admin(true)
+				.build();
 
-        when(membersService.getMembers(eq(chatId), eq(requesterId))).thenReturn(List.of(member));
+		when(membersService.getMembers(chatId, requesterId)).thenReturn(List.of(member));
 
-        mockMvc.perform(get("/rooms/{chatId}/members", chatId)
-                .header(USER_ID_HEADER, requesterId.toString()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].userId").value(requesterId.toString()))
-                .andExpect(jsonPath("$[0].user.username").value("test_user"))
-                .andExpect(jsonPath("$[0].admin").value(true));
-    }
+		mockMvc.perform(get("/rooms/{chatId}/members", chatId)
+				.header(USER_ID_HEADER, requesterId.toString()))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$[0].userId").value(requesterId.toString()))
+				.andExpect(jsonPath("$[0].user.username").value("test_user"))
+				.andExpect(jsonPath("$[0].admin").value(true));
+	}
 
-    @Test
-    @DisplayName("POST /rooms/members should return 200 OK")
-    void addMember_Success() throws Exception {
-        // Matching the @NotNull userId requirement
-        ChatRoomMembersDTO dto = ChatRoomMembersDTO.builder()
-                .userId(UUID.randomUUID())
-                .build();
+	@Test
+	@DisplayName("POST /rooms/members should return 200 OK")
+	void addMember_Success() throws Exception {
+		// Matching the @NotNull userId requirement
+		ChatRoomMembersDTO dto = ChatRoomMembersDTO.builder()
+				.userId(UUID.randomUUID())
+				.build();
 
-        mockMvc.perform(post("/rooms/{chatId}/members", chatId)
-                .header(USER_ID_HEADER, requesterId.toString())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(dto)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.message").value("Member added."));
+		mockMvc.perform(post("/rooms/{chatId}/members", chatId)
+				.header(USER_ID_HEADER, requesterId.toString())
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(dto)))
+				.andExpect(status().isCreated())
+				.andExpect(jsonPath("$.message").value("Member added."));
 
-        verify(membersService).addMember(any(ChatRoomMembersDTO.class), eq(requesterId));
-    }
+		verify(membersService).addMember(any(ChatRoomMembersDTO.class), eq(requesterId));
+	}
 
-    @Test
-    @DisplayName("DELETE /rooms/{chatId}/members/{userId} should return 200 OK")
-    void removeMember_Success() throws Exception {
-        UUID targetUser = UUID.randomUUID();
+	@Test
+	@DisplayName("DELETE /rooms/{chatId}/members/{userId} should return 200 OK")
+	void removeMember_Success() throws Exception {
+		UUID targetUser = UUID.randomUUID();
 
-        // Testing the actual removeMember endpoint you have defined
-        mockMvc.perform(delete("/rooms/{chatId}/members/{userId}", chatId, targetUser)
-                .header(USER_ID_HEADER, requesterId.toString()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("Member removed."));
+		// Testing the actual removeMember endpoint you have defined
+		mockMvc.perform(delete("/rooms/{chatId}/members/{userId}", chatId, targetUser)
+				.header(USER_ID_HEADER, requesterId.toString()))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.message").value("Member removed."));
 
-        verify(membersService).removeMember(chatId, targetUser, requesterId);
-    }
+		verify(membersService).removeMember(chatId, targetUser, requesterId);
+	}
 }

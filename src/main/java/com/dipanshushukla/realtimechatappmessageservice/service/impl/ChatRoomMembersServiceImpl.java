@@ -21,143 +21,146 @@ import com.dipanshushukla.realtimechatappmessageservice.service.ChatRoomMembersS
 @Service
 public class ChatRoomMembersServiceImpl implements ChatRoomMembersService {
 
-        private final ChatRoomRepository chatRoomRepository;
-        private final UserRepository userRepository;
-        private final ChatRoomMemberRepository membersRepository;
+	private final ChatRoomRepository chatRoomRepository;
+	private final UserRepository userRepository;
+	private final ChatRoomMemberRepository membersRepository;
 
-        public ChatRoomMembersServiceImpl(ChatRoomRepository chatRoomRepository,
-                        UserRepository userRepository,
-                        ChatRoomMemberRepository membersRepository) {
+	private static final String CHAT_ROOM_NOT_FOUND = "Chat room not found";
+	private static final String USER_NOT_FOUND = "User not found";
 
-                this.chatRoomRepository = chatRoomRepository;
-                this.userRepository = userRepository;
-                this.membersRepository = membersRepository;
-        }
+	public ChatRoomMembersServiceImpl(ChatRoomRepository chatRoomRepository,
+			UserRepository userRepository,
+			ChatRoomMemberRepository membersRepository) {
 
-        @Override
-        public void ensureMember(Long chatId, UUID requesterId) {
-                ChatRoom chatRoom = chatRoomRepository.findById(chatId)
-                                .orElseThrow(() -> new ResourceNotFoundException("Chat room not found"));
+		this.chatRoomRepository = chatRoomRepository;
+		this.userRepository = userRepository;
+		this.membersRepository = membersRepository;
+	}
 
-                User requester = userRepository.findById(requesterId)
-                                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+	@Override
+	public void ensureMember(Long chatId, UUID requesterId) {
+		ChatRoom chatRoom = chatRoomRepository.findById(chatId)
+				.orElseThrow(() -> new ResourceNotFoundException(CHAT_ROOM_NOT_FOUND));
 
-                boolean isMember = membersRepository.existsByChatRoomAndUser(chatRoom, requester);
-                if (!isMember)
-                        throw new BadRequestException("User is not part of this chat room.");
-        }
+		User requester = userRepository.findById(requesterId)
+				.orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND));
 
-        private void ensureAdmin(Long chatId, UUID requesterId) {
-                User user = userRepository.findById(requesterId)
-                                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+		boolean isMember = membersRepository.existsByChatRoomAndUser(chatRoom, requester);
+		if (!isMember)
+			throw new BadRequestException("User is not part of this chat room.");
+	}
 
-                ChatRoom chatRoom = chatRoomRepository.findById(chatId)
-                                .orElseThrow(() -> new ResourceNotFoundException("Chat room not found"));
+	private void ensureAdmin(Long chatId, UUID requesterId) {
+		User user = userRepository.findById(requesterId)
+				.orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND));
 
-                ChatRoomMember membership = membersRepository.findByChatRoomAndUser(chatRoom, user);
+		ChatRoom chatRoom = chatRoomRepository.findById(chatId)
+				.orElseThrow(() -> new ResourceNotFoundException(CHAT_ROOM_NOT_FOUND));
 
-                if (membership == null || !membership.isAdmin()) {
-                        throw new BadRequestException("Only admins can perform this action.");
-                }
-        }
+		ChatRoomMember membership = membersRepository.findByChatRoomAndUser(chatRoom, user);
 
-        @Override
-        public List<ChatRoomMembersDTO> getMembers(Long chatId, UUID requesterId) {
-                ensureMember(chatId, requesterId);
+		if (membership == null || !membership.isAdmin()) {
+			throw new BadRequestException("Only admins can perform this action.");
+		}
+	}
 
-                ChatRoom room = chatRoomRepository.findById(chatId)
-                                .orElseThrow(() -> new ResourceNotFoundException("Chat room not found"));
+	@Override
+	public List<ChatRoomMembersDTO> getMembers(Long chatId, UUID requesterId) {
+		ensureMember(chatId, requesterId);
 
-                return membersRepository.findByChatRoom(room)
-                                .stream()
-                                .map(ChatRoomMembersDTO::fromEntity)
-                                .toList();
-        }
+		ChatRoom room = chatRoomRepository.findById(chatId)
+				.orElseThrow(() -> new ResourceNotFoundException(CHAT_ROOM_NOT_FOUND));
 
-        @Override
-        public void addMember(ChatRoomMembersDTO dto, UUID requesterId) {
-                ensureMember(dto.getChatId(), requesterId);
+		return membersRepository.findByChatRoom(room)
+				.stream()
+				.map(ChatRoomMembersDTO::fromEntity)
+				.toList();
+	}
 
-                ChatRoom chatRoom = chatRoomRepository.findById(dto.getChatId())
-                                .orElseThrow(() -> new ResourceNotFoundException("Chat room not found"));
+	@Override
+	public void addMember(ChatRoomMembersDTO dto, UUID requesterId) {
+		ensureMember(dto.getChatId(), requesterId);
 
-                if (chatRoom.getType() == ChatRoomType.PRIVATE)
-                        ensureAdmin(dto.getChatId(), requesterId);
+		ChatRoom chatRoom = chatRoomRepository.findById(dto.getChatId())
+				.orElseThrow(() -> new ResourceNotFoundException(CHAT_ROOM_NOT_FOUND));
 
-                User user = userRepository.findById(dto.getUserId())
-                                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+		if (chatRoom.getType() == ChatRoomType.PRIVATE)
+			ensureAdmin(dto.getChatId(), requesterId);
 
-                if (membersRepository.existsByChatRoomAndUser(chatRoom, user))
-                        throw new BadRequestException("User already a member.");
+		User user = userRepository.findById(dto.getUserId())
+				.orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND));
 
-                ChatRoomMember members = ChatRoomMember.builder()
-                                .chatRoom(chatRoom)
-                                .user(user)
-                                .chatRoomMemberId(new ChatRoomMemberId(dto.getChatId(), dto.getUserId()))
-                                .build();
+		if (membersRepository.existsByChatRoomAndUser(chatRoom, user))
+			throw new BadRequestException("User already a member.");
 
-                membersRepository.save(members);
-        }
+		ChatRoomMember members = ChatRoomMember.builder()
+				.chatRoom(chatRoom)
+				.user(user)
+				.chatRoomMemberId(new ChatRoomMemberId(dto.getChatId(), dto.getUserId()))
+				.build();
 
-        @Override
-        public void removeMember(Long chatId, UUID userId, UUID requesterId) {
-                ensureAdmin(chatId, requesterId);
+		membersRepository.save(members);
+	}
 
-                ChatRoomMemberId id = new ChatRoomMemberId(chatId, userId);
+	@Override
+	public void removeMember(Long chatId, UUID userId, UUID requesterId) {
+		ensureAdmin(chatId, requesterId);
 
-                if (!membersRepository.existsById(id))
-                        throw new ResourceNotFoundException("Membership not found.");
+		ChatRoomMemberId id = new ChatRoomMemberId(chatId, userId);
 
-                membersRepository.deleteById(id);
-        }
+		if (!membersRepository.existsById(id))
+			throw new ResourceNotFoundException("Membership not found.");
 
-        @Override
-        public void assignAdmin(Long chatId, UUID userId, UUID requesterId) {
-                ensureAdmin(chatId, requesterId);
+		membersRepository.deleteById(id);
+	}
 
-                ChatRoom chatRoom = chatRoomRepository.findById(chatId)
-                                .orElseThrow(() -> new ResourceNotFoundException("Chat room not found"));
+	@Override
+	public void assignAdmin(Long chatId, UUID userId, UUID requesterId) {
+		ensureAdmin(chatId, requesterId);
 
-                User user = userRepository.findById(userId)
-                                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+		ChatRoom chatRoom = chatRoomRepository.findById(chatId)
+				.orElseThrow(() -> new ResourceNotFoundException(CHAT_ROOM_NOT_FOUND));
 
-                ChatRoomMember member = membersRepository.findByChatRoomAndUser(chatRoom, user);
+		User user = userRepository.findById(userId)
+				.orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND));
 
-                if (member == null)
-                        throw new BadRequestException("User is not a member of this chat room.");
+		ChatRoomMember member = membersRepository.findByChatRoomAndUser(chatRoom, user);
 
-                member.setAdmin(true);
-                membersRepository.save(member);
-        }
+		if (member == null)
+			throw new BadRequestException("User is not a member of this chat room.");
 
-        @Override
-        public void unassignAdmin(Long chatId, UUID userId, UUID requesterId) {
+		member.setAdmin(true);
+		membersRepository.save(member);
+	}
 
-                if (userId == requesterId)
-                        throw new BadRequestException("Cannot remove yourself as admin.");
+	@Override
+	public void unassignAdmin(Long chatId, UUID userId, UUID requesterId) {
 
-                ensureAdmin(chatId, requesterId);
+		if (userId == requesterId)
+			throw new BadRequestException("Cannot remove yourself as admin.");
 
-                ChatRoom chatRoom = chatRoomRepository.findById(chatId)
-                                .orElseThrow(() -> new ResourceNotFoundException("Chat room not found"));
+		ensureAdmin(chatId, requesterId);
 
-                User user = userRepository.findById(userId)
-                                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+		ChatRoom chatRoom = chatRoomRepository.findById(chatId)
+				.orElseThrow(() -> new ResourceNotFoundException(CHAT_ROOM_NOT_FOUND));
 
-                ChatRoomMember member = membersRepository.findByChatRoomAndUser(chatRoom, user);
+		User user = userRepository.findById(userId)
+				.orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND));
 
-                if (member == null)
-                        throw new BadRequestException("User is not a member of this chat room.");
+		ChatRoomMember member = membersRepository.findByChatRoomAndUser(chatRoom, user);
 
-                // Prevent removing the last admin
-                List<ChatRoomMember> admins = membersRepository.findByChatRoom(chatRoom)
-                                .stream().filter(ChatRoomMember::isAdmin).toList();
+		if (member == null)
+			throw new BadRequestException("User is not a member of this chat room.");
 
-                if (admins.size() == 1 && admins.get(0).getUser().getUserId().equals(userId)) {
-                        throw new BadRequestException("Cannot remove the last admin.");
-                }
+		// Prevent removing the last admin
+		List<ChatRoomMember> admins = membersRepository.findByChatRoom(chatRoom)
+				.stream().filter(ChatRoomMember::isAdmin).toList();
 
-                member.setAdmin(false);
-                membersRepository.save(member);
-        }
+		if (admins.size() == 1 && admins.get(0).getUser().getUserId().equals(userId)) {
+			throw new BadRequestException("Cannot remove the last admin.");
+		}
+
+		member.setAdmin(false);
+		membersRepository.save(member);
+	}
 }

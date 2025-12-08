@@ -34,61 +34,64 @@ import com.dipanshushukla.realtimechatappmessageservice.service.impl.ChatRoomSer
 @ExtendWith(MockitoExtension.class)
 class ChatRoomServiceImplTest {
 
-    @Mock
-    private ChatRoomRepository chatRoomRepository;
-    @Mock
-    private UserRepository userRepository;
-    @Mock
-    private ChatRoomMemberRepository memberRepository;
+	@Mock
+	private ChatRoomRepository chatRoomRepository;
+	@Mock
+	private UserRepository userRepository;
+	@Mock
+	private ChatRoomMemberRepository memberRepository;
 
-    @InjectMocks
-    private ChatRoomServiceImpl chatRoomService;
+	@InjectMocks
+	private ChatRoomServiceImpl chatRoomService;
 
-    private User creator;
-    private ChatRoom chatRoom;
+	private User creator;
+	private ChatRoom chatRoom;
 
-    @BeforeEach
-    void setUp() {
-        creator = MessageDataFactory.createValidUser();
-        chatRoom = MessageDataFactory.createValidChatRoom();
-    }
+	@BeforeEach
+	void setUp() {
+		creator = MessageDataFactory.createValidUser();
+		chatRoom = MessageDataFactory.createValidChatRoom();
+	}
 
-    @Test
-    @DisplayName("Should create a Direct Message and add both members")
-    void createChatRoom_DM_Success() {
-        UUID recipientId = UUID.randomUUID();
-        User recipient = new User();
-        recipient.setUserId(recipientId);
+	@Test
+	@DisplayName("Should create a Direct Message and add both members")
+	void createChatRoom_DM_Success() {
+		UUID recipientId = UUID.randomUUID();
+		User recipient = new User();
+		recipient.setUserId(recipientId);
 
-        ChatRoomDTO requestDto = ChatRoomDTO.builder().type(ChatRoomType.DIRECT_MESSAGE).memberIds(Set.of(recipientId))
-                .build();
+		ChatRoomDTO requestDto = ChatRoomDTO.builder().type(ChatRoomType.DIRECT_MESSAGE).memberIds(Set.of(recipientId))
+				.build();
 
-        when(chatRoomRepository.findExistingDirectMessage(creator.getUserId(), recipientId))
-                .thenReturn(Optional.empty());
-        when(chatRoomRepository.save(any(ChatRoom.class))).thenReturn(chatRoom);
-        when(userRepository.findById(creator.getUserId())).thenReturn(Optional.of(creator));
-        when(userRepository.findById(recipientId)).thenReturn(Optional.of(recipient));
+		when(chatRoomRepository.findExistingDirectMessage(creator.getUserId(), recipientId))
+				.thenReturn(Optional.empty());
+		when(chatRoomRepository.save(any(ChatRoom.class))).thenReturn(chatRoom);
+		when(userRepository.findById(creator.getUserId())).thenReturn(Optional.of(creator));
+		when(userRepository.findById(recipientId)).thenReturn(Optional.of(recipient));
 
-        ChatRoomDTO result = chatRoomService.createChatRoom(requestDto, creator.getUserId());
+		ChatRoomDTO result = chatRoomService.createChatRoom(requestDto, creator.getUserId());
 
-        assertNotNull(result);
-        verify(chatRoomRepository).save(any(ChatRoom.class));
+		assertNotNull(result);
+		verify(chatRoomRepository).save(any(ChatRoom.class));
 
-        verify(memberRepository, times(2)).save(any(ChatRoomMember.class)); // Verifies member saves occurred
-    }
+		verify(memberRepository, times(2)).save(any(ChatRoomMember.class)); // Verifies member saves occurred
+	}
 
-    @Test
-    @DisplayName("Should prevent deletion of Direct Message rooms")
-    void deleteChatRoom_DM_ThrowsException() {
-        chatRoom.setType(ChatRoomType.DIRECT_MESSAGE);
-        ChatRoomMember adminMember = ChatRoomMember.builder().admin(true).build();
+	@Test
+	@DisplayName("Should prevent deletion of Direct Message rooms")
+	void deleteChatRoom_DM_ThrowsException() {
+		chatRoom.setType(ChatRoomType.DIRECT_MESSAGE);
+		ChatRoomMember adminMember = ChatRoomMember.builder().admin(true).build();
 
-        when(userRepository.findById(creator.getUserId())).thenReturn(Optional.of(creator));
-        when(chatRoomRepository.findById(chatRoom.getChatId())).thenReturn(Optional.of(chatRoom));
-        when(memberRepository.findByChatRoomAndUser(chatRoom, creator)).thenReturn(adminMember);
+		when(userRepository.findById(creator.getUserId())).thenReturn(Optional.of(creator));
+		when(chatRoomRepository.findById(chatRoom.getChatId())).thenReturn(Optional.of(chatRoom));
+		when(memberRepository.findByChatRoomAndUser(chatRoom, creator)).thenReturn(adminMember);
 
-        assertThrows(BadRequestException.class,
-                () -> chatRoomService.deleteChatRoom(chatRoom.getChatId(), creator.getUserId()));
-    }
+		Long chatId = chatRoom.getChatId();
+		UUID creatorId = creator.getUserId();
+
+		assertThrows(BadRequestException.class,
+				() -> chatRoomService.deleteChatRoom(chatId, creatorId));
+	}
 
 }

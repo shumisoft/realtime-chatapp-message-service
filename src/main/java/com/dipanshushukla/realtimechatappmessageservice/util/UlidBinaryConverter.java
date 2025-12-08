@@ -13,7 +13,6 @@ public class UlidBinaryConverter implements AttributeConverter<String, byte[]> {
         if (ulidString == null)
             return null;
         byte[] bytes = Ulid.from(ulidString).toBytes();
-        System.out.println("ULID Byte Length: " + bytes.length);
         return bytes;
     }
 

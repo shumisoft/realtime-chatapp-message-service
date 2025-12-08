@@ -30,48 +30,48 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @ExtendWith(MockitoExtension.class)
 class UserStatusControllerTest {
 
-    private MockMvc mockMvc;
+	private MockMvc mockMvc;
 
-    @Mock
-    private UserPresenceService userPresenceService;
+	@Mock
+	private UserPresenceService userPresenceService;
 
-    @InjectMocks
-    private UserStatusController userStatusController;
+	@InjectMocks
+	private UserStatusController userStatusController;
 
-    private ObjectMapper objectMapper = new ObjectMapper();
+	private ObjectMapper objectMapper = new ObjectMapper();
 
-    @BeforeEach
-    void setUp() {
-        // Wire up standalone setup with the global exception handler
-        mockMvc = MockMvcBuilders.standaloneSetup(userStatusController)
-                .setControllerAdvice(new GlobalExceptionHandler())
-                .build();
-    }
+	@BeforeEach
+	void setUp() {
+		// Wire up standalone setup with the global exception handler
+		mockMvc = MockMvcBuilders.standaloneSetup(userStatusController)
+				.setControllerAdvice(new GlobalExceptionHandler())
+				.build();
+	}
 
-    @Test
-    @DisplayName("POST /user-status/batch should return map of user statuses")
-    void getUserStatuses_Success() throws Exception {
-        // Arrange
-        String userId = UUID.randomUUID().toString();
-        List<String> requestPayload = List.of(userId);
+	@Test
+	@DisplayName("POST /user-status/batch should return map of user statuses")
+	void getUserStatuses_Success() throws Exception {
+		// Arrange
+		String userId = UUID.randomUUID().toString();
+		List<String> requestPayload = List.of(userId);
 
-        UserStatusDTO statusDto = UserStatusDTO.builder()
-                .userId(userId)
-                .status(OnlineStatusType.ONLINE)
-                .build();
+		UserStatusDTO statusDto = UserStatusDTO.builder()
+				.userId(userId)
+				.status(OnlineStatusType.ONLINE)
+				.build();
 
-        // Mock the exact method call present in the controller
-        when(userPresenceService.getUserStatuses(requestPayload)).thenReturn(Map.of(userId, statusDto));
+		// Mock the exact method call present in the controller
+		when(userPresenceService.getUserStatuses(requestPayload)).thenReturn(Map.of(userId, statusDto));
 
-        // Act & Assert
-        mockMvc.perform(post("/user-status/batch")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(requestPayload)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.['" + userId + "'].status").value("ONLINE"));
+		// Act & Assert
+		mockMvc.perform(post("/user-status/batch")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(requestPayload)))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.['" + userId + "'].status").value("ONLINE"));
 
-        // Verify the service was called properly
-        verify(userPresenceService).getUserStatuses(requestPayload);
-    }
+		// Verify the service was called properly
+		verify(userPresenceService).getUserStatuses(requestPayload);
+	}
 
 }

@@ -18,29 +18,29 @@ import com.dipanshushukla.realtimechatappmessageservice.service.impl.KafkaProduc
 @ExtendWith(MockitoExtension.class)
 class KafkaProducerServiceImplTest {
 
-    @Mock
-    private KafkaTemplate<String, MessageDTO> kafkaTemplate;
+	@Mock
+	private KafkaTemplate<String, MessageDTO> kafkaTemplate;
 
-    @InjectMocks
-    private KafkaProducerServiceImpl kafkaProducerService;
+	@InjectMocks
+	private KafkaProducerServiceImpl kafkaProducerService;
 
-    private MessageDTO mockMessageDTO;
+	private MessageDTO mockMessageDTO;
 
-    @BeforeEach
-    void setUp() {
-        mockMessageDTO = MessageDataFactory.createValidMessageDTO();
-    }
+	@BeforeEach
+	void setUp() {
+		mockMessageDTO = MessageDataFactory.createValidMessageDTO();
+	}
 
-    @Test
-    @DisplayName("Should successfully publish MessageDTO to Kafka with ChatRoomId as Key")
-    void publish_ShouldSendToKafkaTopic() {
-        // Act
-        kafkaProducerService.publish(mockMessageDTO);
+	@Test
+	@DisplayName("Should successfully publish MessageDTO to Kafka with ChatRoomId as Key")
+	void publish_ShouldSendToKafkaTopic() {
+		// Act
+		kafkaProducerService.publish(mockMessageDTO);
 
-        // Assert: Verify it uses the correct topic, parses the Long ID to String for
-        // the key, and passes the DTO
-        verify(kafkaTemplate).send("chat-messages", String.valueOf(MessageDataFactory.DEFAULT_CHAT_ROOM_ID),
-                mockMessageDTO);
-    }
+		// Assert: Verify it uses the correct topic, parses the Long ID to String for
+		// the key, and passes the DTO
+		verify(kafkaTemplate).send("chat-messages", String.valueOf(MessageDataFactory.DEFAULT_CHAT_ROOM_ID),
+				mockMessageDTO);
+	}
 
 }

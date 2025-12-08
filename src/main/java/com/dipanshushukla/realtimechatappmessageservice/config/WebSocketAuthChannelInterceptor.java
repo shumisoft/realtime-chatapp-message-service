@@ -23,6 +23,8 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class WebSocketAuthChannelInterceptor implements ChannelInterceptor {
 
+    private static final String USER_ID_ATTRIBUTE = "userId";
+
     private final ConfigurableJWTProcessor<SecurityContext> jwtProcessor;
     private final ChatRoomMembersService memberService;
 
@@ -53,7 +55,7 @@ public class WebSocketAuthChannelInterceptor implements ChannelInterceptor {
                 // Validate the JWT signature via JWKS
                 var jwt = jwtProcessor.process(token, null);
 
-                String userId = jwt.getStringClaim("userId");
+                String userId = jwt.getStringClaim(USER_ID_ATTRIBUTE);
                 String username = jwt.getStringClaim("username");
 
                 log.info("JWT valid. userId={}, username={}", userId, username);
@@ -62,7 +64,7 @@ public class WebSocketAuthChannelInterceptor implements ChannelInterceptor {
                 accessor.setUser((Principal) () -> userId);
 
                 // Store userId for later SEND frames if needed
-                accessor.getSessionAttributes().put("userId", userId);
+                accessor.getSessionAttributes().put(USER_ID_ATTRIBUTE, userId);
 
             } catch (Exception e) {
                 log.error("Invalid JWT token: {}", e.getMessage());
@@ -75,7 +77,7 @@ public class WebSocketAuthChannelInterceptor implements ChannelInterceptor {
         // ---------------------------
         if (StompCommand.SEND.equals(accessor.getCommand())) {
 
-            Object userId = accessor.getSessionAttributes().get("userId");
+            Object userId = accessor.getSessionAttributes().get(USER_ID_ATTRIBUTE);
 
             if (userId == null) {
                 log.warn("SEND received with no authenticated user. Rejecting message.");
@@ -91,7 +93,7 @@ public class WebSocketAuthChannelInterceptor implements ChannelInterceptor {
         // ---------------------------
         if (StompCommand.SUBSCRIBE.equals(accessor.getCommand())) {
             String destination = accessor.getDestination();
-            String userId = (String) accessor.getSessionAttributes().get("userId");
+            String userId = (String) accessor.getSessionAttributes().get(USER_ID_ATTRIBUTE);
 
             if (destination != null && destination.startsWith("/topic/rooms/")) {
                 String[] parts = destination.split("/");

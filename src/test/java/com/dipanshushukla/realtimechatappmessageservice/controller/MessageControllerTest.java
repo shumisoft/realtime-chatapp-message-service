@@ -31,60 +31,61 @@ import com.dipanshushukla.realtimechatappmessageservice.service.MessageService;
 @ExtendWith(MockitoExtension.class)
 class MessageControllerTest {
 
-    private MockMvc mockMvc;
+	private MockMvc mockMvc;
 
-    @Mock
-    private MessageService messageService;
+	@Mock
+	private MessageService messageService;
 
-    @InjectMocks
-    private MessageController messageController;
+	@InjectMocks
+	private MessageController messageController;
 
-    private MessageDTO messageDTO;
-    private final String USER_ID_HEADER = "X-User-Id";
+	private MessageDTO messageDTO;
+	private static final String USER_ID_HEADER = "X-User-Id";
 
-    @BeforeEach
-    void setUp() {
-        mockMvc = MockMvcBuilders.standaloneSetup(messageController)
-                .setControllerAdvice(new GlobalExceptionHandler())
-                .build();
+	@BeforeEach
+	void setUp() {
+		mockMvc = MockMvcBuilders.standaloneSetup(messageController)
+				.setControllerAdvice(new GlobalExceptionHandler())
+				.build();
 
-        messageDTO = MessageDataFactory.createValidMessageDTO();
-    }
+		messageDTO = MessageDataFactory.createValidMessageDTO();
+	}
 
-    @Test
-    @DisplayName("GET /api/messages/{chatId} should return 200 OK with paginated messages")
-    void getMessagesFromChatRoom_Success() throws Exception {
+	@Test
+	@DisplayName("GET /api/messages/{chatId} should return 200 OK with paginated messages")
+	void getMessagesFromChatRoom_Success() throws Exception {
 
-        PageRequest pageRequest = PageRequest.of(0, 10);
-        Page<MessageDTO> pagedResponse = new PageImpl<>(List.of(messageDTO), pageRequest, 1);
+		PageRequest pageRequest = PageRequest.of(0, 10);
+		Page<MessageDTO> pagedResponse = new PageImpl<>(List.of(messageDTO), pageRequest, 1);
 
-        when(messageService.getMessagesFromChatRoom(eq(MessageDataFactory.DEFAULT_CHAT_ROOM_ID),
-                eq(MessageDataFactory.DEFAULT_SENDER_ID), anyInt(), anyInt()))
-                .thenReturn(pagedResponse);
+		when(messageService.getMessagesFromChatRoom(eq(MessageDataFactory.DEFAULT_CHAT_ROOM_ID),
+				eq(MessageDataFactory.DEFAULT_SENDER_ID), anyInt(), anyInt()))
+				.thenReturn(pagedResponse);
 
-        mockMvc.perform(get("/rooms/{chatId}/messages", MessageDataFactory.DEFAULT_CHAT_ROOM_ID)
-                .header(USER_ID_HEADER, MessageDataFactory.DEFAULT_SENDER_ID.toString())
-                .param("page", "0")
-                .param("size", "20"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content[0].messageId").value(MessageDataFactory.DEFAULT_MESSAGE_ID))
-                .andExpect(jsonPath("$.content[0].content").value(MessageDataFactory.DEFAULT_CONTENT));
-    }
+		mockMvc.perform(get("/rooms/{chatId}/messages", MessageDataFactory.DEFAULT_CHAT_ROOM_ID)
+				.header(USER_ID_HEADER, MessageDataFactory.DEFAULT_SENDER_ID.toString())
+				.param("page", "0")
+				.param("size", "20"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.content[0].messageId")
+						.value(MessageDataFactory.DEFAULT_MESSAGE_ID))
+				.andExpect(jsonPath("$.content[0].content").value(MessageDataFactory.DEFAULT_CONTENT));
+	}
 
-    @Test
-    @DisplayName("GET /messages/{messageId} should return 404 when message not found")
-    void getMessage_NotFound_Returns404() throws Exception {
-        String invalidMessageId = "INVALID_ID";
+	@Test
+	@DisplayName("GET /messages/{messageId} should return 404 when message not found")
+	void getMessage_NotFound_Returns404() throws Exception {
+		String invalidMessageId = "INVALID_ID";
 
-        when(messageService.getMessage(eq(invalidMessageId), eq(MessageDataFactory.DEFAULT_SENDER_ID)))
-                .thenThrow(new ResourceNotFoundException("Message not found"));
+		when(messageService.getMessage(invalidMessageId, MessageDataFactory.DEFAULT_SENDER_ID))
+				.thenThrow(new ResourceNotFoundException("Message not found"));
 
-        // FIX 1: URL path corrected to single slash
-        mockMvc.perform(get("/messages/{messageId}", invalidMessageId)
-                .header(USER_ID_HEADER, MessageDataFactory.DEFAULT_SENDER_ID.toString()))
-                .andExpect(status().isNotFound())
-                // FIX 2: Assert against JSON field "message" instead of raw response string
-                .andExpect(jsonPath("$.message").value("Message not found"));
-    }
+		// FIX 1: URL path corrected to single slash
+		mockMvc.perform(get("/messages/{messageId}", invalidMessageId)
+				.header(USER_ID_HEADER, MessageDataFactory.DEFAULT_SENDER_ID.toString()))
+				.andExpect(status().isNotFound())
+				// FIX 2: Assert against JSON field "message" instead of raw response string
+				.andExpect(jsonPath("$.message").value("Message not found"));
+	}
 
 }
