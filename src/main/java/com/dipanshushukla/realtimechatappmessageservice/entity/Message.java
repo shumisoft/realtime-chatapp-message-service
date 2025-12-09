@@ -3,6 +3,8 @@ package com.dipanshushukla.realtimechatappmessageservice.entity;
 import java.sql.Timestamp;
 
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import com.dipanshushukla.realtimechatappmessageservice.model.MessageStatus;
 import com.dipanshushukla.realtimechatappmessageservice.model.MessageType;
@@ -34,6 +36,7 @@ public class Message {
 
     @ManyToOne
     @JoinColumn(name = "chatId")
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private ChatRoom chatRoom;
 
     @ManyToOne
@@ -47,10 +50,11 @@ public class Message {
     @CreationTimestamp
     private Timestamp timestamp;
 
+    @Builder.Default
     @Enumerated(value = EnumType.STRING)
     private MessageStatus status = MessageStatus.UNREAD;
 
+    @Builder.Default
     @Enumerated(value = EnumType.STRING)
     private MessageType type = MessageType.TEXT;
-
 }

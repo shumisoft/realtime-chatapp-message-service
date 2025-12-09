@@ -3,7 +3,6 @@ package com.dipanshushukla.realtimechatappmessageservice.service;
 import java.util.List;
 import java.util.UUID;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.dipanshushukla.realtimechatappmessageservice.dto.ChatRoomMembersDTO;
@@ -20,52 +19,72 @@ import com.dipanshushukla.realtimechatappmessageservice.repository.UserRepositor
 @Service
 public class ChatRoomMembersService {
 
-    @Autowired
-    private ChatRoomRepository chatRoomRepository;
+        private final ChatRoomRepository chatRoomRepository;
+        private final UserRepository userRepository;
+        private final ChatRoomMembersRepository membersRepository;
 
-    @Autowired
-    private UserRepository userRepository;
+        public ChatRoomMembersService(ChatRoomRepository chatRoomRepository,
+                        UserRepository userRepository,
+                        ChatRoomMembersRepository membersRepository) {
 
-    @Autowired
-    private ChatRoomMembersRepository chatRoomMembersRepository;
-
-    public void addMember(ChatRoomMembersDTO dto) {
-        ChatRoom chatRoom = chatRoomRepository.findById(dto.getChatId())
-                .orElseThrow(() -> new ResourceNotFoundException("Chat Room not found with id: " + dto.getChatId()));
-
-        User user = userRepository.findById(dto.getUserId())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + dto.getUserId()));
-
-        if (chatRoomMembersRepository.existsByChatRoomAndUser(chatRoom, user)) {
-            throw new BadRequestException("User is already a member of the chat room.");
+                this.chatRoomRepository = chatRoomRepository;
+                this.userRepository = userRepository;
+                this.membersRepository = membersRepository;
         }
 
-        ChatRoomMembers members = ChatRoomMembers.builder()
-                .chatRoomMembersId(new ChatRoomMembersId(dto.getChatId(), dto.getUserId()))
-                .chatRoom(chatRoom)
-                .user(user)
-                .build();
+        private void ensureMember(Long chatId, UUID requesterId) {
+                ChatRoom chatRoom = chatRoomRepository.findById(chatId)
+                                .orElseThrow(() -> new ResourceNotFoundException("Chat room not found"));
 
-        chatRoomMembersRepository.save(members);
-    }
+                User requester = userRepository.findById(requesterId)
+                                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-    public void removeMember(Long chatRoomId, UUID userId) {
-        chatRoomRepository.findById(chatRoomId)
-                .orElseThrow(() -> new ResourceNotFoundException("Chat Room not found with id: " + chatRoomId));
-        userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+                boolean isMember = membersRepository.existsByChatRoomAndUser(chatRoom, requester);
+                if (!isMember)
+                        throw new BadRequestException("User is not part of this chat room.");
+        }
 
-        ChatRoomMembersId id = new ChatRoomMembersId(chatRoomId, userId);
-        chatRoomMembersRepository.deleteById(id);
-    }
+        public List<ChatRoomMembersDTO> getMembers(Long chatId, UUID requesterId) {
+                ensureMember(chatId, requesterId);
 
-    public List<UUID> getMembers(Long chatRoomId) {
-        ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
-                .orElseThrow(() -> new ResourceNotFoundException("Chat Room not found with id: " + chatRoomId));
+                ChatRoom room = chatRoomRepository.findById(chatId)
+                                .orElseThrow(() -> new ResourceNotFoundException("Chat room not found"));
 
-        return chatRoomMembersRepository.findByChatRoom(chatRoom)
-                .stream()
-                .map(x -> x.getUser().getUserId())
-                .toList();
-    }
+                return membersRepository.findByChatRoom(room)
+                                .stream()
+                                .map(ChatRoomMembersDTO::fromEntity)
+                                .toList();
+        }
+
+        public void addMember(ChatRoomMembersDTO dto, UUID requesterId) {
+                ensureMember(dto.getChatId(), requesterId);
+
+                ChatRoom chatRoom = chatRoomRepository.findById(dto.getChatId())
+                                .orElseThrow(() -> new ResourceNotFoundException("Chat room not found"));
+
+                User user = userRepository.findById(dto.getUserId())
+                                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+                if (membersRepository.existsByChatRoomAndUser(chatRoom, user))
+                        throw new BadRequestException("User already a member.");
+
+                ChatRoomMembers members = ChatRoomMembers.builder()
+                                .chatRoom(chatRoom)
+                                .user(user)
+                                .chatRoomMembersId(new ChatRoomMembersId(dto.getChatId(), dto.getUserId()))
+                                .build();
+
+                membersRepository.save(members);
+        }
+
+        public void removeMember(Long chatId, UUID userId, UUID requesterId) {
+                ensureMember(chatId, requesterId);
+
+                ChatRoomMembersId id = new ChatRoomMembersId(chatId, userId);
+
+                if (!membersRepository.existsById(id))
+                        throw new ResourceNotFoundException("Membership not found.");
+
+                membersRepository.deleteById(id);
+        }
 }

@@ -6,6 +6,6 @@ import org.springframework.stereotype.Repository;
 import com.dipanshushukla.realtimechatappmessageservice.entity.ChatRoom;
 
 @Repository
-public interface ChatRoomRepository extends JpaRepository<ChatRoom,Long> {
+public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
 
 }

@@ -1,15 +1,25 @@
 package com.dipanshushukla.realtimechatappmessageservice.repository;
 
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import com.dipanshushukla.realtimechatappmessageservice.entity.ChatRoom;
 import com.dipanshushukla.realtimechatappmessageservice.entity.Message;
-import java.util.List;
-
 
 @Repository
-public interface MessageRepository extends JpaRepository<Message, Long>{
+public interface MessageRepository extends JpaRepository<Message, Long> {
     List<Message> findByChatRoom(ChatRoom chatRoom);
+
+    @Query("""
+                SELECT m
+                FROM Message m
+                WHERE m.chatRoom.chatId = :chatId
+                ORDER BY m.timestamp DESC
+                LIMIT 1
+            """)
+    Message findLatestMessage(Long chatId);
 
 }

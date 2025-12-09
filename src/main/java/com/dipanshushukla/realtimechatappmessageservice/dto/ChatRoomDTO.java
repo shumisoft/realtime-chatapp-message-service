@@ -6,7 +6,10 @@ import com.dipanshushukla.realtimechatappmessageservice.entity.ChatRoom;
 import com.dipanshushukla.realtimechatappmessageservice.model.ChatRoomType;
 
 import jakarta.validation.constraints.NotNull;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @AllArgsConstructor
@@ -26,6 +29,8 @@ public class ChatRoomDTO {
 
     @NotNull(message = "'description' is required!")
     private String description;
+
+    private MessageDTO latestMessage;
 
     public static ChatRoomDTO fromEntity(ChatRoom entity) {
         return ChatRoomDTO.builder()

@@ -1,5 +1,8 @@
 package com.dipanshushukla.realtimechatappmessageservice.entity;
 
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
 import com.dipanshushukla.realtimechatappmessageservice.model.ChatRoomMembersId;
 
 import jakarta.persistence.*;
@@ -20,6 +23,7 @@ public class ChatRoomMembers {
 
     @ManyToOne
     @JoinColumn(name = "chatId", insertable = false, updatable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private ChatRoom chatRoom;
 
     @ManyToOne

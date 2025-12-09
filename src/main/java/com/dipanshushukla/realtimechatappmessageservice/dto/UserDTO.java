@@ -13,6 +13,13 @@ import java.util.UUID;
 public class UserDTO {
 
     private UUID userId;
+    private String username;
+
+    private String email;
+
+    private String fullName;
+    private String avatar;
+    private String bio;
 
     public static UserDTO fromEntity(User entity) {
         return UserDTO.builder()
@@ -21,6 +28,11 @@ public class UserDTO {
     }
 
     public User toEntity() {
-        return new User(this.userId);
+        return User.builder().userId(userId)
+                .fullName(username)
+                .email(email)
+                .avatar(avatar)
+                .bio(bio)
+                .build();
     }
 }
