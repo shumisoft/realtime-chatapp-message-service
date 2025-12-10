@@ -12,8 +12,8 @@ public class UlidBinaryConverter implements AttributeConverter<String, byte[]> {
     public byte[] convertToDatabaseColumn(String ulidString) {
         if (ulidString == null)
             return null;
-        byte[] bytes = Ulid.from(ulidString).toBytes();
-        return bytes;
+
+        return Ulid.from(ulidString).toBytes();
     }
 
     @Override
