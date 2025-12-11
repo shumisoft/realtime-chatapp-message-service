@@ -19,7 +19,7 @@ import lombok.NoArgsConstructor;
 @Builder
 public class MessageDTO {
 
-    private Long messageId;
+    private String messageId;
 
     private Long chatRoomId;
 
@@ -61,7 +61,6 @@ public class MessageDTO {
                 .type(this.type)
                 .edited(edited)
                 .build();
-
     }
 
 }

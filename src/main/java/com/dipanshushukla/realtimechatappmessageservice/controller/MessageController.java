@@ -64,7 +64,7 @@ public class MessageController {
     @GetMapping("/messages/{messageId}")
     public ResponseEntity<MessageDTO> getMessage(
             @RequestHeader("X-User-Id") String userId,
-            @PathVariable Long messageId) {
+            @PathVariable String messageId) {
 
         MessageDTO dto = service.getMessage(messageId, parse(userId));
         return ResponseEntity.ok(dto);
@@ -73,7 +73,7 @@ public class MessageController {
     @PutMapping("/messages/{messageId}")
     public ResponseEntity<String> updateStatus(
             @RequestHeader("X-User-Id") String userId,
-            @PathVariable Long messageId) {
+            @PathVariable String messageId) {
 
         service.updateMessageStatus(messageId, parse(userId));
         return ResponseEntity.ok("Message status updated.");

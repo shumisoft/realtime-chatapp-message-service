@@ -8,13 +8,13 @@ import org.hibernate.annotations.OnDeleteAction;
 
 import com.dipanshushukla.realtimechatappmessageservice.model.MessageStatus;
 import com.dipanshushukla.realtimechatappmessageservice.model.MessageType;
+import com.dipanshushukla.realtimechatappmessageservice.util.UlidBinaryConverter;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -31,8 +31,9 @@ import lombok.NoArgsConstructor;
 public class Message {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long messageId;
+    @Column(columnDefinition = "BINARY(16)")
+    @Convert(converter = UlidBinaryConverter.class)
+    private String messageId;
 
     @ManyToOne
     @JoinColumn(name = "chatId")

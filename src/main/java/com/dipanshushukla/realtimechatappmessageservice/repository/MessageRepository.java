@@ -12,7 +12,7 @@ import com.dipanshushukla.realtimechatappmessageservice.entity.ChatRoom;
 import com.dipanshushukla.realtimechatappmessageservice.entity.Message;
 
 @Repository
-public interface MessageRepository extends JpaRepository<Message, Long> {
+public interface MessageRepository extends JpaRepository<Message, String> {
     List<Message> findByChatRoom(ChatRoom chatRoom);
 
     @Query("""

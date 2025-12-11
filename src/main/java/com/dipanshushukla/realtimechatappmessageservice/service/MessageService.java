@@ -29,6 +29,7 @@ public class MessageService {
         private final ChatRoomRepository chatRoomRepository;
         private final UserRepository userRepository;
         private final ChatRoomMembersRepository chatRoomMembersRepository;
+        private final ULIDService ulidService;
 
         private void ensureMember(Long chatId, UUID requesterId) {
                 ChatRoom room = chatRoomRepository.findById(chatId)
@@ -53,6 +54,7 @@ public class MessageService {
                                 .orElseThrow(() -> new ResourceNotFoundException("Chat room not found"));
 
                 Message message = Message.builder()
+                                .messageId(ulidService.newId())
                                 .chatRoom(room)
                                 .user(user)
                                 .content(dto.getContent())
@@ -78,7 +80,7 @@ public class MessageService {
                 return paged.map(MessageDTO::fromEntity);
         }
 
-        public MessageDTO getMessage(Long messageId, UUID requesterId) {
+        public MessageDTO getMessage(String messageId, UUID requesterId) {
                 Message msg = messageRepository.findById(messageId)
                                 .orElseThrow(() -> new ResourceNotFoundException("Message not found"));
 
@@ -87,7 +89,7 @@ public class MessageService {
                 return MessageDTO.fromEntity(msg);
         }
 
-        public void updateMessageStatus(Long messageId, UUID requesterId) {
+        public void updateMessageStatus(String messageId, UUID requesterId) {
                 Message msg = messageRepository.findById(messageId)
                                 .orElseThrow(() -> new ResourceNotFoundException("Message not found"));
 
