@@ -32,6 +32,8 @@ public class ChatRoomDTO {
 
     private MessageDTO latestMessage;
 
+    private ChatRoomMembersDTO[] members;
+
     public static ChatRoomDTO fromEntity(ChatRoom entity) {
         return ChatRoomDTO.builder()
                 .chatId(entity.getChatId())
@@ -39,6 +41,8 @@ public class ChatRoomDTO {
                 .type(entity.getType())
                 .createdAt(entity.getCreatedAt())
                 .description(entity.getDescription())
+                .members(entity.getMembers().stream().map((member) -> ChatRoomMembersDTO.fromEntity(member))
+                        .toArray(ChatRoomMembersDTO[]::new))
                 .build();
     }
 

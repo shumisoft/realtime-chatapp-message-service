@@ -30,10 +30,9 @@ public class WebSocketChatController {
         dto.setMessageId(ulid.newIdString());
         dto.setUserId(senderId);
 
-        // SINGLE SOURCE OF TRUTH
-        MessageDTO saved = messageService.createMessage(dto, senderId);
+        System.out.println(dto);
 
         // FANOUT ONLY
-        redisMessagePublisher.publish("chat-messages", saved);
+        redisMessagePublisher.publish("chat-messages", dto);
     }
 }
