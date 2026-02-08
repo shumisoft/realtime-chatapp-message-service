@@ -1,5 +1,7 @@
 package com.dipanshushukla.realtimechatappmessageservice.controller;
 
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.UUID;
 
 import org.springframework.messaging.handler.annotation.Header;
@@ -29,6 +31,7 @@ public class WebSocketChatController {
         // assign ID at ingress
         dto.setMessageId(ulid.newIdString());
         dto.setUserId(senderId);
+        dto.setTimestamp(Timestamp.from(Instant.now()));
 
         System.out.println(dto);
 

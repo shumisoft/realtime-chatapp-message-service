@@ -41,7 +41,8 @@ public class MessageService {
                 boolean isMember = chatRoomMembersRepository.existsByChatRoomAndUser(room, user);
 
                 if (!isMember)
-                        throw new BadRequestException("User is not part of this chat room.");
+                        throw new BadRequestException("User                 if (!isMember)\n" + //
+                                        "is not part of this chat room.");
         }
 
         public MessageDTO createMessage(MessageDTO dto, UUID requesterId) {
@@ -53,16 +54,20 @@ public class MessageService {
                 ChatRoom room = chatRoomRepository.findById(dto.getChatRoomId())
                                 .orElseThrow(() -> new ResourceNotFoundException("Chat room not found"));
 
-                Message message = Message.builder()
-                                .messageId(ulidService.newId())
-                                .chatRoom(room)
-                                .user(user)
-                                .content(dto.getContent())
-                                .type(dto.getType() != null ? dto.getType() : MessageType.TEXT)
-                                .status(MessageStatus.UNREAD)
-                                .build();
+                // Message message = Message.builder()
+                // .messageId(ulidService.newId())
+                // .chatRoom(room)
+                // .user(user)
+                // .content(dto.getContent())
+                // .type(dto.getType() != null ? dto.getType() : MessageType.TEXT)
+                // .status(MessageStatus.UNREAD)
+                // .build();
 
-                messageRepository.save(message);
+                Message message = dto.toEntity();
+                message.setChatRoom(room);
+                message.setUser(user);
+
+                message = messageRepository.save(message);
 
                 return MessageDTO.fromEntity(message);
         }

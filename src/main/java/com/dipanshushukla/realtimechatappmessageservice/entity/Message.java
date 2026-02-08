@@ -52,7 +52,7 @@ public class Message {
     private String content;
 
     @Column(nullable = false, updatable = false)
-    @CreationTimestamp
+    // @CreationTimestamp
     private Timestamp timestamp;
 
     @Builder.Default

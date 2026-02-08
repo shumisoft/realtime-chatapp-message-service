@@ -25,6 +25,7 @@ public class RedisMessageSubscriber implements MessageListener {
         try {
             MessageDTO dto = objectMapper.readValue(message.getBody(), MessageDTO.class);
 
+            System.out.println(dto);
             // save in DB
             MessageDTO saved = messageService.createMessage(dto, dto.getUserId());
 
