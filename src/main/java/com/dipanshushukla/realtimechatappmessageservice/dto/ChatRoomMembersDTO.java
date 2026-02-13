@@ -2,8 +2,8 @@ package com.dipanshushukla.realtimechatappmessageservice.dto;
 
 import java.util.UUID;
 
-import com.dipanshushukla.realtimechatappmessageservice.entity.ChatRoomMembers;
-import com.dipanshushukla.realtimechatappmessageservice.model.ChatRoomMembersId;
+import com.dipanshushukla.realtimechatappmessageservice.entity.ChatRoomMember;
+import com.dipanshushukla.realtimechatappmessageservice.model.ChatRoomMemberId;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -26,17 +26,17 @@ public class ChatRoomMembersDTO {
     @NotNull(message = "'userId' is required!")
     private UUID userId;
 
-    public static ChatRoomMembersDTO fromEntity(ChatRoomMembers entity) {
+    public static ChatRoomMembersDTO fromEntity(ChatRoomMember entity) {
         return ChatRoomMembersDTO.builder()
-                .chatId(entity.getChatRoomMembersId().getChatId())
-                .userId(entity.getChatRoomMembersId().getUserId())
+                .chatId(entity.getChatRoomMemberId().getChatId())
+                .userId(entity.getChatRoomMemberId().getUserId())
                 .user(UserDTO.fromEntity(entity.getUser()))
                 .admin(entity.isAdmin())
                 .build();
     }
 
-    public ChatRoomMembers toEntity() {
-        return ChatRoomMembers.builder().chatRoomMembersId(new ChatRoomMembersId(this.chatId, this.userId))
+    public ChatRoomMember toEntity() {
+        return ChatRoomMember.builder().chatRoomMemberId(new ChatRoomMemberId(this.chatId, this.userId))
                 .admin(this.admin).build();
     }
 }

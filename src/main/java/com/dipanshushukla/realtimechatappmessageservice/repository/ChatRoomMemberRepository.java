@@ -8,19 +8,19 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import com.dipanshushukla.realtimechatappmessageservice.entity.ChatRoom;
-import com.dipanshushukla.realtimechatappmessageservice.entity.ChatRoomMembers;
+import com.dipanshushukla.realtimechatappmessageservice.entity.ChatRoomMember;
 import com.dipanshushukla.realtimechatappmessageservice.entity.User;
-import com.dipanshushukla.realtimechatappmessageservice.model.ChatRoomMembersId;
+import com.dipanshushukla.realtimechatappmessageservice.model.ChatRoomMemberId;
 
 @Repository
-public interface ChatRoomMembersRepository extends JpaRepository<ChatRoomMembers, ChatRoomMembersId> {
+public interface ChatRoomMemberRepository extends JpaRepository<ChatRoomMember, ChatRoomMemberId> {
 
     boolean existsByChatRoomAndUser(ChatRoom chatRoom, User user);
 
-    List<ChatRoomMembers> findByChatRoom(ChatRoom chatRoom);
+    List<ChatRoomMember> findByChatRoom(ChatRoom chatRoom);
 
-    ChatRoomMembers findByChatRoomAndUser(ChatRoom chatRoom, User user);
+    ChatRoomMember findByChatRoomAndUser(ChatRoom chatRoom, User user);
 
-    Page<ChatRoomMembers> findByUser(User user, Pageable pageable);
+    Page<ChatRoomMember> findByUser(User user, Pageable pageable);
 
 }

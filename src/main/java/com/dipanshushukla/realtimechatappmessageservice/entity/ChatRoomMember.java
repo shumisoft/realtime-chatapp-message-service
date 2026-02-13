@@ -3,7 +3,7 @@ package com.dipanshushukla.realtimechatappmessageservice.entity;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
-import com.dipanshushukla.realtimechatappmessageservice.model.ChatRoomMembersId;
+import com.dipanshushukla.realtimechatappmessageservice.model.ChatRoomMemberId;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.EmbeddedId;
@@ -20,10 +20,10 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class ChatRoomMembers {
+public class ChatRoomMember {
 
     @EmbeddedId
-    private ChatRoomMembersId chatRoomMembersId;
+    private ChatRoomMemberId chatRoomMemberId;
 
     @ManyToOne
     @JoinColumn(name = "chatId", insertable = false, updatable = false)

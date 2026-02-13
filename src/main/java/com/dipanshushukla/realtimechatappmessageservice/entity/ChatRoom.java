@@ -49,7 +49,7 @@ public class ChatRoom {
     private List<Message> messages = new ArrayList<>();
 
     @OneToMany(mappedBy = "chatRoom", cascade = CascadeType.REMOVE, orphanRemoval = true)
-    private List<ChatRoomMembers> members = new ArrayList<>();
+    private List<ChatRoomMember> members = new ArrayList<>();
 
     public ChatRoom(String name, ChatRoomType type, String description) {
         this.name = name;

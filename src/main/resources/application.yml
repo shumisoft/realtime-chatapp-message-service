@@ -1,6 +1,7 @@
 spring:
     application:
         name: realtime-chatapp-message-service
+
     config:
         import: "configserver:"
 

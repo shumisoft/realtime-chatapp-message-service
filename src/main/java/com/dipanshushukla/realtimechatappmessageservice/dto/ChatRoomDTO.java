@@ -1,6 +1,8 @@
 package com.dipanshushukla.realtimechatappmessageservice.dto;
 
 import java.sql.Timestamp;
+import java.util.Set;
+import java.util.UUID;
 
 import com.dipanshushukla.realtimechatappmessageservice.entity.ChatRoom;
 import com.dipanshushukla.realtimechatappmessageservice.model.ChatRoomType;
@@ -34,6 +36,8 @@ public class ChatRoomDTO {
 
     private ChatRoomMembersDTO[] members;
 
+    private Set<UUID> memberIds;
+
     public static ChatRoomDTO fromEntity(ChatRoom entity) {
         return ChatRoomDTO.builder()
                 .chatId(entity.getChatId())
@@ -41,8 +45,11 @@ public class ChatRoomDTO {
                 .type(entity.getType())
                 .createdAt(entity.getCreatedAt())
                 .description(entity.getDescription())
-                .members(entity.getMembers().stream().map((member) -> ChatRoomMembersDTO.fromEntity(member))
-                        .toArray(ChatRoomMembersDTO[]::new))
+                .members(entity.getMembers() != null
+                        ? entity.getMembers().stream()
+                                .map(ChatRoomMembersDTO::fromEntity)
+                                .toArray(ChatRoomMembersDTO[]::new)
+                        : new ChatRoomMembersDTO[0])
                 .build();
     }
 

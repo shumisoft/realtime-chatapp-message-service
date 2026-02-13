@@ -1,5 +1,7 @@
 package com.dipanshushukla.realtimechatappmessageservice.service;
 
+import java.util.ArrayList;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
@@ -9,27 +11,29 @@ import org.springframework.stereotype.Service;
 import com.dipanshushukla.realtimechatappmessageservice.dto.ChatRoomDTO;
 import com.dipanshushukla.realtimechatappmessageservice.dto.MessageDTO;
 import com.dipanshushukla.realtimechatappmessageservice.entity.ChatRoom;
-import com.dipanshushukla.realtimechatappmessageservice.entity.ChatRoomMembers;
+import com.dipanshushukla.realtimechatappmessageservice.entity.ChatRoomMember;
 import com.dipanshushukla.realtimechatappmessageservice.entity.Message;
 import com.dipanshushukla.realtimechatappmessageservice.entity.User;
 import com.dipanshushukla.realtimechatappmessageservice.exception.BadRequestException;
 import com.dipanshushukla.realtimechatappmessageservice.exception.ResourceNotFoundException;
-import com.dipanshushukla.realtimechatappmessageservice.model.ChatRoomMembersId;
+import com.dipanshushukla.realtimechatappmessageservice.model.ChatRoomMemberId;
 import com.dipanshushukla.realtimechatappmessageservice.model.ChatRoomType;
-import com.dipanshushukla.realtimechatappmessageservice.repository.ChatRoomMembersRepository;
+import com.dipanshushukla.realtimechatappmessageservice.repository.ChatRoomMemberRepository;
 import com.dipanshushukla.realtimechatappmessageservice.repository.ChatRoomRepository;
 import com.dipanshushukla.realtimechatappmessageservice.repository.MessageRepository;
 import com.dipanshushukla.realtimechatappmessageservice.repository.UserRepository;
 
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @AllArgsConstructor
+@Slf4j
 public class ChatRoomService {
 
     private final ChatRoomRepository chatRoomRepository;
     private final UserRepository userRepository;
-    private final ChatRoomMembersRepository membersRepository;
+    private final ChatRoomMemberRepository memberRepository;
     private final MessageRepository messageRepository;
 
     private void ensureMember(Long chatId, UUID requesterId) {
@@ -39,7 +43,7 @@ public class ChatRoomService {
         ChatRoom chatRoom = chatRoomRepository.findById(chatId)
                 .orElseThrow(() -> new ResourceNotFoundException("Chat room not found"));
 
-        boolean isMember = membersRepository.existsByChatRoomAndUser(chatRoom, user);
+        boolean isMember = memberRepository.existsByChatRoomAndUser(chatRoom, user);
 
         if (!isMember)
             throw new BadRequestException("User is not a member of this chat room.");
@@ -52,7 +56,7 @@ public class ChatRoomService {
         ChatRoom chatRoom = chatRoomRepository.findById(chatId)
                 .orElseThrow(() -> new ResourceNotFoundException("Chat room not found"));
 
-        ChatRoomMembers membership = membersRepository.findByChatRoomAndUser(chatRoom, user);
+        ChatRoomMember membership = memberRepository.findByChatRoomAndUser(chatRoom, user);
 
         if (membership == null || !membership.isAdmin()) {
             throw new BadRequestException("Only admins can perform this action.");
@@ -60,30 +64,83 @@ public class ChatRoomService {
     }
 
     public ChatRoomDTO createChatRoom(ChatRoomDTO dto, UUID creatorId) {
-        ChatRoom chatRoom = ChatRoom.builder()
-                .name(dto.getName())
-                .description(dto.getDescription())
-                .type(dto.getType())
-                .build();
+        // 1. Handle Direct Messages
+        if (dto.getType() == ChatRoomType.DIRECT_MESSAGE) {
+            if (dto.getMemberIds() == null || dto.getMemberIds().size() != 1) {
+                throw new BadRequestException("Direct message must have exactly one recipient.");
+            }
 
-        chatRoomRepository.save(chatRoom);
+            UUID recipientId = dto.getMemberIds().iterator().next();
 
-        // Add creator as first member
-        User user = userRepository.findById(creatorId)
-                .orElseThrow(() -> new ResourceNotFoundException("Creator not found"));
+            // Check for existing DM to avoid duplicates
+            Optional<ChatRoom> existingChat = chatRoomRepository.findExistingDirectMessage(creatorId, recipientId);
+            if (existingChat.isPresent()) {
+                return ChatRoomDTO.fromEntity(existingChat.get());
+            }
 
-        ChatRoomMembers members = ChatRoomMembers.builder()
+            // Create new DM Room
+            ChatRoom chatRoom = ChatRoom.builder()
+                    .type(ChatRoomType.DIRECT_MESSAGE)
+                    .name("DM")
+                    .members(new ArrayList<>()) // FIX: Initialize list
+                    .build();
+
+            chatRoom = chatRoomRepository.save(chatRoom);
+
+            // Add Creator & Recipient
+            addMember(chatRoom, creatorId, false);
+            addMember(chatRoom, recipientId, false);
+
+            return ChatRoomDTO.fromEntity(chatRoom);
+        }
+
+        // 2. Handle Group Chats (Public/Private)
+        else {
+            ChatRoom chatRoom = ChatRoom.builder()
+                    .name(dto.getName())
+                    .description(dto.getDescription())
+                    .type(dto.getType())
+                    .members(new ArrayList<>()) // FIX: Initialize list
+                    .build();
+
+            chatRoom = chatRoomRepository.save(chatRoom);
+
+            // Add Creator as Admin
+            addMember(chatRoom, creatorId, true);
+
+            // Add other initial members (if any)
+            if (dto.getMemberIds() != null && !dto.getMemberIds().isEmpty()) {
+                for (UUID memberId : dto.getMemberIds()) {
+                    if (!memberId.equals(creatorId)) {
+                        addMember(chatRoom, memberId, false);
+                    }
+                }
+            }
+
+            return ChatRoomDTO.fromEntity(chatRoom);
+        }
+    }
+
+    // Helper method: Updates BOTH Database and Memory to prevent NPE
+    private void addMember(ChatRoom chatRoom, UUID userId, boolean isAdmin) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + userId));
+
+        ChatRoomMember member = ChatRoomMember.builder()
                 .chatRoom(chatRoom)
                 .user(user)
-                .chatRoomMembersId(new ChatRoomMembersId(chatRoom.getChatId(), creatorId))
+                .chatRoomMemberId(new ChatRoomMemberId(chatRoom.getChatId(), userId))
+                .admin(isAdmin)
                 .build();
 
-        if (chatRoom.getType() != ChatRoomType.DIRECT_MESSAGE)
-            members.setAdmin(true);
+        // 1. Save to DB
+        memberRepository.save(member);
 
-        membersRepository.save(members);
-
-        return ChatRoomDTO.fromEntity(chatRoom);
+        // 2. Update In-Memory Object (So DTO conversion works immediately)
+        if (chatRoom.getMembers() == null) {
+            chatRoom.setMembers(new ArrayList<>());
+        }
+        chatRoom.getMembers().add(member);
     }
 
     public ChatRoomDTO getChatRoomById(Long chatId, UUID requesterId) {
@@ -140,5 +197,4 @@ public class ChatRoomService {
             return dto;
         });
     }
-
 }

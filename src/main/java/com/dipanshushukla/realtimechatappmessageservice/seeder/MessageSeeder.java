@@ -11,9 +11,9 @@ import org.springframework.stereotype.Controller;
 
 import com.dipanshushukla.realtimechatappmessageservice.dto.MessageDTO;
 import com.dipanshushukla.realtimechatappmessageservice.entity.ChatRoom;
-import com.dipanshushukla.realtimechatappmessageservice.entity.ChatRoomMembers;
+import com.dipanshushukla.realtimechatappmessageservice.entity.ChatRoomMember;
 import com.dipanshushukla.realtimechatappmessageservice.entity.User;
-import com.dipanshushukla.realtimechatappmessageservice.repository.ChatRoomMembersRepository;
+import com.dipanshushukla.realtimechatappmessageservice.repository.ChatRoomMemberRepository;
 import com.dipanshushukla.realtimechatappmessageservice.repository.ChatRoomRepository;
 import com.dipanshushukla.realtimechatappmessageservice.repository.MessageRepository;
 import com.dipanshushukla.realtimechatappmessageservice.service.MessageService;
@@ -28,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 public class MessageSeeder implements ApplicationRunner {
 
   private final ChatRoomRepository chatRoomRepository;
-  private final ChatRoomMembersRepository membersRepository;
+  private final ChatRoomMemberRepository membersRepository;
 
   private final MessageService messageService;
   private final MessageRepository messageRepository;
@@ -60,7 +60,7 @@ public class MessageSeeder implements ApplicationRunner {
         .toList();
 
     dmRooms.forEach(room -> {
-      List<ChatRoomMembers> members = membersRepository.findByChatRoom(room);
+      List<ChatRoomMember> members = membersRepository.findByChatRoom(room);
       members.forEach(member -> {
         User user = member.getUser();
         createMessage(room.getChatId(), user.getUserId(),
@@ -78,9 +78,9 @@ public class MessageSeeder implements ApplicationRunner {
         .findFirst()
         .orElseThrow(() -> new IllegalStateException("Dummy Group chat room missing"));
 
-    List<ChatRoomMembers> members = membersRepository.findByChatRoom(group);
+    List<ChatRoomMember> members = membersRepository.findByChatRoom(group);
     User admin = members.stream()
-        .filter(ChatRoomMembers::isAdmin)
+        .filter(ChatRoomMember::isAdmin)
         .findFirst()
         .orElseThrow(() -> new IllegalStateException("No admin found in Dummy Group"))
         .getUser();
@@ -92,7 +92,7 @@ public class MessageSeeder implements ApplicationRunner {
     // Other members introduction
     members.stream()
         .filter(m -> !m.isAdmin())
-        .map(ChatRoomMembers::getUser)
+        .map(ChatRoomMember::getUser)
         .forEach(user -> createMessage(group.getChatId(), user.getUserId(),
             "Hello, I am " + user.getUsername()));
   }

@@ -8,10 +8,10 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Controller;
 
 import com.dipanshushukla.realtimechatappmessageservice.entity.ChatRoom;
-import com.dipanshushukla.realtimechatappmessageservice.entity.ChatRoomMembers;
+import com.dipanshushukla.realtimechatappmessageservice.entity.ChatRoomMember;
 import com.dipanshushukla.realtimechatappmessageservice.entity.User;
-import com.dipanshushukla.realtimechatappmessageservice.model.ChatRoomMembersId;
-import com.dipanshushukla.realtimechatappmessageservice.repository.ChatRoomMembersRepository;
+import com.dipanshushukla.realtimechatappmessageservice.model.ChatRoomMemberId;
+import com.dipanshushukla.realtimechatappmessageservice.repository.ChatRoomMemberRepository;
 import com.dipanshushukla.realtimechatappmessageservice.repository.ChatRoomRepository;
 import com.dipanshushukla.realtimechatappmessageservice.repository.UserRepository;
 
@@ -26,14 +26,14 @@ public class ChatRoomMembersSeeder implements ApplicationRunner {
 
   private final ChatRoomRepository chatRoomRepository;
   private final UserRepository userRepository;
-  private final ChatRoomMembersRepository membersRepository;
+  private final ChatRoomMemberRepository memberRepository;
 
   @Override
   public void run(ApplicationArguments args) throws Exception {
 
     log.info("[Seeder] ChatRoomMembersSeeder is running...");
 
-    if (membersRepository.count() > 0) {
+    if (memberRepository.count() > 0) {
       log.info("[Seeder] ChatRoomMembersSeeder skipped (members already exist)");
       return;
     }
@@ -103,17 +103,17 @@ public class ChatRoomMembersSeeder implements ApplicationRunner {
 
   private void saveMembership(ChatRoom room, User user, boolean admin) {
 
-    ChatRoomMembers members = ChatRoomMembers.builder()
+    ChatRoomMember member = ChatRoomMember.builder()
         .chatRoom(room)
         .user(user)
-        .chatRoomMembersId(
-            new ChatRoomMembersId(
+        .chatRoomMemberId(
+            new ChatRoomMemberId(
                 room.getChatId(),
                 user.getUserId()))
         .admin(admin)
         .build();
 
-    membersRepository.save(members);
+    memberRepository.save(member);
 
     log.info(
         "[Seeder] ✔ Added {} to {}{}",

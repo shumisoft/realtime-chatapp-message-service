@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ChatRoomMembersId implements Serializable {
+public class ChatRoomMemberId implements Serializable {
 
     private Long chatId;
     private UUID userId;

@@ -14,7 +14,7 @@ import com.dipanshushukla.realtimechatappmessageservice.exception.BadRequestExce
 import com.dipanshushukla.realtimechatappmessageservice.exception.ResourceNotFoundException;
 import com.dipanshushukla.realtimechatappmessageservice.model.MessageStatus;
 import com.dipanshushukla.realtimechatappmessageservice.model.MessageType;
-import com.dipanshushukla.realtimechatappmessageservice.repository.ChatRoomMembersRepository;
+import com.dipanshushukla.realtimechatappmessageservice.repository.ChatRoomMemberRepository;
 import com.dipanshushukla.realtimechatappmessageservice.repository.ChatRoomRepository;
 import com.dipanshushukla.realtimechatappmessageservice.repository.MessageRepository;
 import com.dipanshushukla.realtimechatappmessageservice.repository.UserRepository;
@@ -28,7 +28,7 @@ public class MessageService {
         private final MessageRepository messageRepository;
         private final ChatRoomRepository chatRoomRepository;
         private final UserRepository userRepository;
-        private final ChatRoomMembersRepository chatRoomMembersRepository;
+        private final ChatRoomMemberRepository chatRoomMembersRepository;
         private final ULIDService ulidService;
 
         private void ensureMember(Long chatId, UUID requesterId) {
