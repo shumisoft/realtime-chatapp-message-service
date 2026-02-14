@@ -3,6 +3,7 @@ package com.dipanshushukla.realtimechatappmessageservice.seeder;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -17,6 +18,7 @@ import com.dipanshushukla.realtimechatappmessageservice.repository.ChatRoomMembe
 import com.dipanshushukla.realtimechatappmessageservice.repository.ChatRoomRepository;
 import com.dipanshushukla.realtimechatappmessageservice.repository.MessageRepository;
 import com.dipanshushukla.realtimechatappmessageservice.service.MessageService;
+import com.dipanshushukla.realtimechatappmessageservice.service.ULIDService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +34,8 @@ public class MessageSeeder implements ApplicationRunner {
 
   private final MessageService messageService;
   private final MessageRepository messageRepository;
+
+  private final ULIDService ulidService;
 
   @Override
   public void run(ApplicationArguments args) throws Exception {
@@ -140,12 +144,13 @@ public class MessageSeeder implements ApplicationRunner {
             "Hello, I am " + user.getUsername()));
   }
 
-  private void createMessage(Long chatRoomId, java.util.UUID userId, String content) {
+  private void createMessage(Long chatRoomId, UUID userId, String content) {
     MessageDTO dto = new MessageDTO();
     dto.setChatRoomId(chatRoomId);
     dto.setUserId(userId);
     dto.setContent(content);
     dto.setTimestamp(Timestamp.from(Instant.now()));
+    dto.setMessageId(ulidService.newIdString());
     messageService.createMessage(dto, userId);
     log.info("[Seeder] ✔ Created message in chat {}: {}", chatRoomId, content);
   }

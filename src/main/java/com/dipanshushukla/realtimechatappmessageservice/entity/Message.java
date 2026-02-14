@@ -2,13 +2,11 @@ package com.dipanshushukla.realtimechatappmessageservice.entity;
 
 import java.sql.Timestamp;
 
-import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
 import com.dipanshushukla.realtimechatappmessageservice.model.MessageStatus;
 import com.dipanshushukla.realtimechatappmessageservice.model.MessageType;
-import com.github.f4b6a3.ulid.UlidCreator;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -17,7 +15,6 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.PrePersist;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -30,14 +27,9 @@ import lombok.NoArgsConstructor;
 @Builder
 public class Message {
 
-    // @Id
-    // @Column(columnDefinition = "BINARY(16)")
-    // @Convert(converter = UlidBinaryConverter.class)
-    // private String messageId;
-
     @Id
-    @Column(name = "message_id", columnDefinition = "BINARY(16)")
-    private byte[] messageId;
+    @Column(name = "message_id")
+    private String messageId;
 
     @ManyToOne
     @JoinColumn(name = "chatId")
@@ -52,7 +44,7 @@ public class Message {
     private String content;
 
     @Column(nullable = false, updatable = false)
-    // @CreationTimestamp
+
     private Timestamp timestamp;
 
     @Builder.Default
@@ -67,10 +59,4 @@ public class Message {
     @Column(nullable = false)
     private boolean edited = false;
 
-    @PrePersist
-    private void prePersist() {
-        if (this.messageId == null) {
-            this.messageId = UlidCreator.getUlid().toBytes();
-        }
-    }
 }

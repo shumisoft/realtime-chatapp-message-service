@@ -13,7 +13,6 @@ import com.dipanshushukla.realtimechatappmessageservice.entity.User;
 import com.dipanshushukla.realtimechatappmessageservice.exception.BadRequestException;
 import com.dipanshushukla.realtimechatappmessageservice.exception.ResourceNotFoundException;
 import com.dipanshushukla.realtimechatappmessageservice.model.MessageStatus;
-import com.dipanshushukla.realtimechatappmessageservice.model.MessageType;
 import com.dipanshushukla.realtimechatappmessageservice.repository.ChatRoomMemberRepository;
 import com.dipanshushukla.realtimechatappmessageservice.repository.ChatRoomRepository;
 import com.dipanshushukla.realtimechatappmessageservice.repository.MessageRepository;
@@ -29,7 +28,6 @@ public class MessageService {
         private final ChatRoomRepository chatRoomRepository;
         private final UserRepository userRepository;
         private final ChatRoomMemberRepository chatRoomMembersRepository;
-        private final ULIDService ulidService;
 
         private void ensureMember(Long chatId, UUID requesterId) {
                 ChatRoom room = chatRoomRepository.findById(chatId)
@@ -53,15 +51,6 @@ public class MessageService {
 
                 ChatRoom room = chatRoomRepository.findById(dto.getChatRoomId())
                                 .orElseThrow(() -> new ResourceNotFoundException("Chat room not found"));
-
-                // Message message = Message.builder()
-                // .messageId(ulidService.newId())
-                // .chatRoom(room)
-                // .user(user)
-                // .content(dto.getContent())
-                // .type(dto.getType() != null ? dto.getType() : MessageType.TEXT)
-                // .status(MessageStatus.UNREAD)
-                // .build();
 
                 Message message = dto.toEntity();
                 message.setChatRoom(room);

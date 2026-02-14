@@ -42,7 +42,7 @@ public class MessageDTO {
 
     public static MessageDTO fromEntity(Message entity) {
         return MessageDTO.builder()
-                .messageId(UlidUtils.toString(entity.getMessageId()))
+                .messageId(entity.getMessageId())
                 .chatRoomId(entity.getChatRoom().getChatId())
                 .userId(entity.getUser().getUserId())
                 .content(entity.getContent())
@@ -55,7 +55,7 @@ public class MessageDTO {
 
     public Message toEntity() {
         return Message.builder()
-                .messageId(UlidUtils.toBytes(this.messageId))
+                .messageId(this.messageId)
                 .content(this.content)
                 .timestamp(this.timestamp)
                 .status(this.status)

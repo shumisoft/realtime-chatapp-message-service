@@ -10,18 +10,23 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.dipanshushukla.realtimechatappmessageservice.dto.MessageDTO;
 import com.dipanshushukla.realtimechatappmessageservice.redis.RedisMessagePublisher;
+import com.dipanshushukla.realtimechatappmessageservice.service.KafkaProducerService;
 import com.dipanshushukla.realtimechatappmessageservice.service.MessageService;
 import com.dipanshushukla.realtimechatappmessageservice.service.ULIDService;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @RequiredArgsConstructor
+@Slf4j
 public class WebSocketChatController {
 
     private final MessageService messageService;
     private final RedisMessagePublisher redisMessagePublisher;
     private final ULIDService ulid;
+
+    private final KafkaProducerService kafkaProducerService;
 
     @MessageMapping("/chat.sendMessage")
     public void sendMessage(@Header("X-User-Id") String userId, MessageDTO dto) {
@@ -33,7 +38,12 @@ public class WebSocketChatController {
         dto.setUserId(senderId);
         dto.setTimestamp(Timestamp.from(Instant.now()));
 
-        System.out.println(dto);
+        log.info(dto.toString());
+
+        // Publish to Kafka for asynchronous persistence
+        kafkaProducerService.publish(dto);
+
+        // MessageDTO saved = messageService.createMessage(dto, dto.getUserId());
 
         // FANOUT ONLY
         redisMessagePublisher.publish("chat-messages", dto);
