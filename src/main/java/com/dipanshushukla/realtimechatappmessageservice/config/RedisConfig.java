@@ -51,6 +51,7 @@ public class RedisConfig {
         RedisMessageListenerContainer container = new RedisMessageListenerContainer();
         container.setConnectionFactory(factory);
         container.addMessageListener(subscriber, new PatternTopic("chat-messages"));
+        container.addMessageListener(subscriber, new PatternTopic("chat-typing"));
         return container;
     }
 }

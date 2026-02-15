@@ -1,5 +1,6 @@
 package com.dipanshushukla.realtimechatappmessageservice.config;
 
+import com.dipanshushukla.realtimechatappmessageservice.service.ChatRoomMembersService;
 import com.nimbusds.jose.proc.SecurityContext;
 import com.nimbusds.jwt.proc.ConfigurableJWTProcessor;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +14,7 @@ import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.stereotype.Component;
 
 import java.security.Principal;
+import java.util.UUID;
 
 @Slf4j
 @Component
@@ -20,6 +22,7 @@ import java.security.Principal;
 public class WebSocketAuthChannelInterceptor implements ChannelInterceptor {
 
     private final ConfigurableJWTProcessor<SecurityContext> jwtProcessor;
+    private final ChatRoomMembersService memberService;
 
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
@@ -81,6 +84,32 @@ public class WebSocketAuthChannelInterceptor implements ChannelInterceptor {
             accessor.addNativeHeader("X-User-Id", userId.toString());
         }
 
+        // ---------------------------
+        // 3) HANDLE SUBSCRIBE FRAME (Add this)
+        // ---------------------------
+        if (StompCommand.SUBSCRIBE.equals(accessor.getCommand())) {
+            String destination = accessor.getDestination();
+            String userId = (String) accessor.getSessionAttributes().get("userId");
+
+            if (destination != null && destination.startsWith("/topic/rooms/")) {
+                String[] parts = destination.split("/");
+                String roomIdStr = parts[3];
+
+                try {
+                    Long roomUUID = Long.parseLong(roomIdStr);
+                    UUID userUUID = UUID.fromString(userId);
+
+                    memberService.ensureMember(roomUUID, userUUID);
+
+                    log.info("Subscription authorized for user {} to room {}", userId, roomIdStr);
+                } catch (Exception e) {
+                    log.error("Invalid room ID or subscription format: {}", destination);
+                    return null;
+                }
+            }
+        }
+
         return message;
     }
+
 }

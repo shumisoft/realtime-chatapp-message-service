@@ -173,7 +173,7 @@ public class ChatRoomService {
 
         ChatRoom c = chatRoomRepository.findById(chatId)
                 .orElseThrow(() -> new ResourceNotFoundException("Chat room not found"));
-        if (c.getType() != ChatRoomType.DIRECT_MESSAGE)
+        if (c.getType() == ChatRoomType.DIRECT_MESSAGE)
             throw new BadRequestException("Cannot delete a direct message chatroom.");
         chatRoomRepository.delete(c);
     }

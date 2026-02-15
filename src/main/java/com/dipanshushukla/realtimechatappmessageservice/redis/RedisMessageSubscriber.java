@@ -6,6 +6,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
 
 import com.dipanshushukla.realtimechatappmessageservice.dto.MessageDTO;
+import com.dipanshushukla.realtimechatappmessageservice.dto.TypingEventDTO;
 import com.dipanshushukla.realtimechatappmessageservice.service.MessageService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -23,12 +24,15 @@ public class RedisMessageSubscriber implements MessageListener {
     public void onMessage(Message message, byte[] pattern) {
 
         try {
-            MessageDTO dto = objectMapper.readValue(message.getBody(), MessageDTO.class);
-
-            // broadcast to room
-            messagingTemplate.convertAndSend(
-                    "/topic/rooms/" + dto.getChatRoomId(),
-                    dto);
+            String channel = new String(message.getChannel());
+            if (channel.equals("chat-messages")) {
+                MessageDTO dto = objectMapper.readValue(message.getBody(), MessageDTO.class);
+                messagingTemplate.convertAndSend("/topic/rooms/" + dto.getChatRoomId(), dto);
+            } else if (channel.equals("chat-typing")) {
+                TypingEventDTO typingDto = objectMapper.readValue(message.getBody(), TypingEventDTO.class);
+                // Send to a sub-topic specifically for typing
+                messagingTemplate.convertAndSend("/topic/rooms/" + typingDto.getChatId() + "/typing", typingDto);
+            }
 
         } catch (Exception e) {
             e.printStackTrace();

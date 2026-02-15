@@ -33,7 +33,7 @@ public class ChatRoomMembersService {
                 this.membersRepository = membersRepository;
         }
 
-        private void ensureMember(Long chatId, UUID requesterId) {
+        public void ensureMember(Long chatId, UUID requesterId) {
                 ChatRoom chatRoom = chatRoomRepository.findById(chatId)
                                 .orElseThrow(() -> new ResourceNotFoundException("Chat room not found"));
 
