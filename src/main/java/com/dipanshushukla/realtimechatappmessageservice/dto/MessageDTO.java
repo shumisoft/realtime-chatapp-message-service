@@ -31,7 +31,7 @@ public class MessageDTO {
     private Timestamp timestamp;
 
     @Builder.Default
-    private MessageStatus status = MessageStatus.UNREAD;
+    private MessageStatus status = MessageStatus.SENT;
 
     @Builder.Default
     private MessageType type = MessageType.TEXT;

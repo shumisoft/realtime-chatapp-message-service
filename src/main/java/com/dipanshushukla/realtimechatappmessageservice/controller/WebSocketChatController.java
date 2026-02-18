@@ -1,5 +1,6 @@
 package com.dipanshushukla.realtimechatappmessageservice.controller;
 
+import java.security.Principal;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.UUID;
@@ -13,6 +14,7 @@ import com.dipanshushukla.realtimechatappmessageservice.dto.TypingEventDTO;
 import com.dipanshushukla.realtimechatappmessageservice.redis.RedisMessagePublisher;
 import com.dipanshushukla.realtimechatappmessageservice.service.KafkaProducerService;
 import com.dipanshushukla.realtimechatappmessageservice.service.ULIDService;
+import com.dipanshushukla.realtimechatappmessageservice.service.UserPresenceService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +28,7 @@ public class WebSocketChatController {
     private final ULIDService ulid;
 
     private final KafkaProducerService kafkaProducerService;
+    private final UserPresenceService userPresenceService;
 
     @MessageMapping("/chat.sendMessage")
     public void sendMessage(@Header("X-User-Id") String userId, MessageDTO dto) {
@@ -51,5 +54,10 @@ public class WebSocketChatController {
     @MessageMapping("/chat.typing")
     public void handleTyping(@Header("X-User-Id") String userId, TypingEventDTO event) {
         redisMessagePublisher.publish("chat-typing", event);
+    }
+
+    @MessageMapping("/heartbeat")
+    public void receiveHeartbeat(Principal principal) {
+        userPresenceService.markUserOnline(principal.getName());
     }
 }

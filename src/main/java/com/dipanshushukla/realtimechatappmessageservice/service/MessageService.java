@@ -12,6 +12,7 @@ import com.dipanshushukla.realtimechatappmessageservice.entity.Message;
 import com.dipanshushukla.realtimechatappmessageservice.entity.User;
 import com.dipanshushukla.realtimechatappmessageservice.exception.BadRequestException;
 import com.dipanshushukla.realtimechatappmessageservice.exception.ResourceNotFoundException;
+import com.dipanshushukla.realtimechatappmessageservice.model.ChatRoomType;
 import com.dipanshushukla.realtimechatappmessageservice.model.MessageStatus;
 import com.dipanshushukla.realtimechatappmessageservice.repository.ChatRoomMemberRepository;
 import com.dipanshushukla.realtimechatappmessageservice.repository.ChatRoomRepository;
@@ -66,6 +67,9 @@ public class MessageService {
 
                 ChatRoom room = chatRoomRepository.findById(chatRoomId)
                                 .orElseThrow(() -> new ResourceNotFoundException("Chat room not found"));
+
+                if (room.getType() == ChatRoomType.DIRECT_MESSAGE)
+                        messageRepository.markMessagesAsRead(chatRoomId, requesterId);
 
                 PageRequest pageable = PageRequest.of(page, size);
 

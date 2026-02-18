@@ -1,7 +1,6 @@
 package com.dipanshushukla.realtimechatappmessageservice.model;
 
-public enum MessageStatus {
-    SENT,
-    DELIVERED,
-    READ
+public enum OnlineStatusType {
+    ONLINE,
+    OFFLINE
 }

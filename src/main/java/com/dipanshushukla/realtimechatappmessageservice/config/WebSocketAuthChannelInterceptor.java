@@ -57,7 +57,7 @@ public class WebSocketAuthChannelInterceptor implements ChannelInterceptor {
                 log.info("JWT valid. userId={}, username={}", userId, username);
 
                 // Set Principal so @MessageMapping can access it
-                accessor.setUser((Principal) () -> username);
+                accessor.setUser((Principal) () -> userId);
 
                 // Store userId for later SEND frames if needed
                 accessor.getSessionAttributes().put("userId", userId);

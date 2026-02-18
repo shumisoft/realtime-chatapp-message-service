@@ -49,7 +49,7 @@ public class Message {
 
     @Builder.Default
     @Enumerated(value = EnumType.STRING)
-    private MessageStatus status = MessageStatus.UNREAD;
+    private MessageStatus status = MessageStatus.SENT;
 
     @Builder.Default
     @Enumerated(value = EnumType.STRING)
