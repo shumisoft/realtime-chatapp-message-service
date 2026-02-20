@@ -37,7 +37,7 @@ public class MessageDTO {
     private MessageType type = MessageType.TEXT;
 
     @Builder.Default
-    private boolean edited = false;
+    private Boolean edited = false;
 
     public static MessageDTO fromEntity(Message entity) {
         return MessageDTO.builder()

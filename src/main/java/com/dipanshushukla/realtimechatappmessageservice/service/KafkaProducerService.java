@@ -6,9 +6,11 @@ import org.springframework.stereotype.Service;
 import com.dipanshushukla.realtimechatappmessageservice.dto.MessageDTO;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class KafkaProducerService {
 
     private final KafkaTemplate<String, MessageDTO> kafkaTemplate;
@@ -19,6 +21,6 @@ public class KafkaProducerService {
 
         kafkaTemplate.send(TOPIC, String.valueOf(key), dto);
 
-        System.out.println("Message sent to Kafka topic: " + dto.getContent());
+        log.info("Message sent to Kafka topic.");
     }
 }

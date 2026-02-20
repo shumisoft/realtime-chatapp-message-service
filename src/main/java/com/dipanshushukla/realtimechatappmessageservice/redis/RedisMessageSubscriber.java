@@ -7,16 +7,16 @@ import org.springframework.stereotype.Component;
 
 import com.dipanshushukla.realtimechatappmessageservice.dto.MessageDTO;
 import com.dipanshushukla.realtimechatappmessageservice.dto.TypingEventDTO;
-import com.dipanshushukla.realtimechatappmessageservice.service.MessageService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import tools.jackson.databind.ObjectMapper;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class RedisMessageSubscriber implements MessageListener {
 
-    private final MessageService messageService;
     private final SimpMessagingTemplate messagingTemplate;
     private final ObjectMapper objectMapper;
 
@@ -27,6 +27,7 @@ public class RedisMessageSubscriber implements MessageListener {
             String channel = new String(message.getChannel());
             if (channel.equals("chat-messages")) {
                 MessageDTO dto = objectMapper.readValue(message.getBody(), MessageDTO.class);
+                log.info("message recieved on redis sub.");
                 messagingTemplate.convertAndSend("/topic/rooms/" + dto.getChatRoomId(), dto);
             } else if (channel.equals("chat-typing")) {
                 TypingEventDTO typingDto = objectMapper.readValue(message.getBody(), TypingEventDTO.class);

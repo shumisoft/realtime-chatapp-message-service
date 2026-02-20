@@ -47,8 +47,11 @@ public class WebSocketChatController {
         // Publish to Kafka for asynchronous persistence
         kafkaProducerService.publish(dto);
 
+        log.info("Message published to kafka.");
+
         // FANOUT ONLY
         redisMessagePublisher.publish("chat-messages", dto);
+        log.info("Message published to redis.");
     }
 
     @MessageMapping("/chat.typing")
